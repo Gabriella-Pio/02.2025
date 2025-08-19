@@ -7,7 +7,7 @@ public class Introducao {
     
     public static void olaMundo(int i) {
         if(i>=1) {
-            System.out.println("Hello world");
+            System.out.println("Hello world" + i);
             olaMundo(i-1);
         }
     }
