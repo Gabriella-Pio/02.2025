@@ -74,7 +74,7 @@ public class Exercicio {
   }
 
   // Este algoritmo recursivo é eficiente para resolver este problema? Justifique sua resposta.
-  // Não, pois a cada charactere diferente, é feita duas novas recursões para identificar a lcs. Utiliza muita memória mesmo para casos pequenos, facilmente não ter memória de máquina suficiente para casos de grande complexidade- complexidade exponencial.
+  // Não, pois a cada caractere diferente, é feita duas novas recursões para identificar a lcs. Utiliza muita memória mesmo para casos pequenos, facilmente não teria memória de máquina suficiente para casos de grande complexidade - complexidade exponencial.
 
   /**
    * Calcula o comprimento da subsequência comum mais longa (LCS)
