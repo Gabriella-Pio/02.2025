@@ -26,7 +26,7 @@ public class Exercicio {
 
   // Exercício 1
 
-  // Crie uma função recursiva que calcula a potência de um número, ou seja, X^Z:
+  // Crie uma função recursiva que calcula a potência de um número, ou seja, X^N:
   public static int potencia(int x, int n) {
     // Qual a condição de parada?
     // Condição de parada: se o expoente for 0
@@ -39,6 +39,7 @@ public class Exercicio {
       return x * potencia(x, n - 1);
     }
     // Qual a complexidade desta função? O(n), tamanho do expoente
+    // 2 ^ 5 = 2 * 2 * 2 * 2 * 2 * 1
   }
 
   // Exercício 2 – Longest Common Subsequence
@@ -110,6 +111,11 @@ public class Exercicio {
     }
 
 //         ""  B   A   B   A   C   B   A   B
+//         ""  A   B   C   A   B   C   A   B   C
+
+//         ""  A   B   C   A   B   C   A   B   C
+
+
 // ""      0   0   0   0   0   0   0   0   0
 // A       0   0   1   1   1   1   1   1   1
 // B       0   1   1   2   2   2   2   2   2
