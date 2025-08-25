@@ -56,5 +56,7 @@ public class ArrayListTeste {
       }
     }
 
+    nomes.set(1, "Davi");
+    System.out.println(nomes);
   }
 }
