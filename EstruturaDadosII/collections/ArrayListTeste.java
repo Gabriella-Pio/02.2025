@@ -22,7 +22,7 @@ public class ArrayListTeste {
     System.out.println(nomes);
 
     System.out.println(nomes.isEmpty());
-    
+
     nomes.add("Carlos");
     nomes.add("Henrique");
     nomes.add("Eduardo");
@@ -34,19 +34,27 @@ public class ArrayListTeste {
     if (nomes.isEmpty()) {
       System.out.println("Lista vazia");
     } else {
-      boolean achou = false;
-      for(String s : nomes) {
-      System.out.println(s);
-      if (s.equalsIgnoreCase(nomeProcurado)) {
-        achou = true;
+      // boolean achou = false;
+      // for(String s : nomes) {
+      // System.out.println(s);
+      // if (s.equalsIgnoreCase(nomeProcurado)) {
+      // achou = true;
+      // }
+      // }
+      // if (achou == true) {
+      // System.out.println(nomeProcurado + " esta na lista");
+      // } else {
+      // System.out.println(nomeProcurado + " n esta na lista");
+      // }
+
+      System.out.println("tamanho da lista " + nomes.size());
+
+      if (nomes.contains(nomeProcurado)) {
+        System.out.println(nomeProcurado + " esta na lista");
+      } else {
+        System.out.println(nomeProcurado + " n encontrado");
       }
     }
-    if (achou == true) {
-      System.out.println(nomeProcurado + " esta na lista");      
-    } else {
-      System.out.println(nomeProcurado + " n esta na lista");
-    }
-    }
-    
+
   }
 }
