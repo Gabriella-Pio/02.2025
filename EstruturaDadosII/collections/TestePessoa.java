@@ -6,43 +6,71 @@ import java.util.Scanner;
 
 public class TestePessoa {
   public static void main(String[] args) {
-    Scanner entrada = new Scanner(System.in);
-    
-    // Lista para armazenar objetos do tipo Pessoa
-    List<Pessoa> pessoas = new ArrayList<>();
+    // TODO Auto-generated method stub
 
+    Scanner entrada = new Scanner(System.in);
+    List<Pessoa> pessoas = new ArrayList<Pessoa>();
     int opc;
+
+    pessoas.add(new Pessoa("Carlos", "05678977732", 67, 5000.0));
+    pessoas.add(new Pessoa("Henrique", "11122233344", 34, 10000.0));
 
     do {
       System.out.println("Informe seu nome: ");
       String nome = entrada.nextLine();
-      
-      System.out.println("Informe seu cpf: ");
+      System.out.println(nome + ", informe seu CPF: ");
       String cpf = entrada.nextLine();
-      
-      System.out.println("Informe sua idade: ");
-      Integer idade = entrada.nextInt(); // Use nextInt() para ler um número
-      entrada.nextLine(); // Consome a quebra de linha
+      System.out.println(nome + ", informe sua idade: ");
+      Integer idade = entrada.nextInt();
+      System.out.println(nome + ", informe seu salário (em R$): ");
+      Double salario = entrada.nextDouble();
 
-      System.out.println("Informe seu salario: ");
-      Double salario = entrada.nextDouble(); // Use nextDouble() para ler um double
-      entrada.nextLine(); // Consome a quebra de linha
+      Pessoa pessoa = new Pessoa(nome, cpf, idade, salario);
+      pessoas.add(pessoa);
 
-      // Instancia um novo objeto Pessoa com os dados lidos
-      Pessoa p = new Pessoa(nome, cpf, idade, salario);
+      System.out.println("Deseja continuar? (1- sim; 0- nao): ");
+      opc = entrada.nextInt();
 
-      // Adiciona o objeto 'p' à lista 'pessoas'
-      pessoas.add(p);
+      entrada.nextLine();
 
-      System.out.println("Deseja continuar? (1 - sim, 2 - nao)");
-      opc = entrada.nextInt(); // Lê a opção do usuário
-      entrada.nextLine(); // Consome a quebra de linha
     } while (opc == 1);
 
-    // Imprime a lista de pessoas
-    System.out.println(pessoas);
-    
-    // Fechar o scanner para evitar vazamento de recursos
-    entrada.close();
+    // a) Buscar uma pessoa pelo CPF
+    System.out.println("Informe o CPF a ser buscado");
+    String cpfProcurado = entrada.nextLine();
+
+    boolean achou = false;
+    Pessoa pCpfEncontrado = null;
+    Double somaIdades = 0.0;
+    Double somaSalarios = 0.0;
+    for (Pessoa p : pessoas) {
+      if (p.getCpf().equalsIgnoreCase(cpfProcurado)) {
+        achou = true;
+        pCpfEncontrado = p;
+      }
+
+      somaIdades += p.getIdade();
+      somaSalarios += p.getSalario();
+    }
+    if (!achou) {
+      System.out.println(cpfProcurado + ", não existe na lista de pessoas");
+    } else {
+      System.out.println(cpfProcurado + ", existe na lista de pessoas");
+    }
+
+    // b) qual posição meu elemento está armazenado?
+
+    System.out.println(pessoas.indexOf(pCpfEncontrado));
+
+    // c) remover o elemento do cpf encontrado
+
+    pessoas.remove(pessoas.indexOf(pCpfEncontrado));
+
+    // d) qual a média de Idades e Salarios das pessoas na lista?
+
+    Double mediaIdades = somaIdades / pessoas.size();
+    Double mediaSalarios = somaSalarios / pessoas.size();
+
   }
+
 }

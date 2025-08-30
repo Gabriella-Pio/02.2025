@@ -8,35 +8,42 @@ public class Pessoa {
   private Double salario;
 
   public Pessoa() {
+  }
 
+  public Pessoa(String nome, String cpf, Integer idade, Double salario) {
+    super();
+    this.nome = nome;
+    this.cpf = cpf;
+    this.idade = idade;
+    this.salario = salario;
   }
 
   public String getNome() {
     return nome;
   }
 
-  public String getCpf() {
-    return cpf;
-  }
-
-  public Integer getIdade() {
-    return idade;
-  }
-
-  public Double getSalario() {
-    return salario;
-  }
-
   public void setNome(String nome) {
     this.nome = nome;
+  }
+
+  public String getCpf() {
+    return cpf;
   }
 
   public void setCpf(String cpf) {
     this.cpf = cpf;
   }
 
+  public Integer getIdade() {
+    return idade;
+  }
+
   public void setIdade(Integer idade) {
     this.idade = idade;
+  }
+
+  public Double getSalario() {
+    return salario;
   }
 
   public void setSalario(Double salario) {
@@ -44,6 +51,8 @@ public class Pessoa {
   }
 
   public String toString() {
-    return "Nome: " + this.nome + ", CPF: " + this.cpf + ", Idade: " + this.idade + ", Salario: " + this.salario + "\n";
+    return "Nome: " + this.nome + ", CPF: " + this.cpf +
+        ", Idade: " + this.idade + ", Salário: R$ " + this.salario + "\n";
   }
+
 }

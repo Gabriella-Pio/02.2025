@@ -4,59 +4,43 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ArrayListTeste {
-  public static void main(String[] args) {
+  public static void main(String args[]) {
+
     List<String> nomes = new ArrayList<String>();
 
-    nomes.add("Gabriella");
+    nomes.add("Eduardo");
     nomes.add("Joyce");
-
-    System.out.println(nomes);
-
-    nomes.add(1, "Luiz");
-    System.out.println(nomes);
-
-    nomes.remove("Gabriella");
-    System.out.println(nomes);
-
-    nomes.remove(0);
-    System.out.println(nomes);
-
-    System.out.println(nomes.isEmpty());
-
     nomes.add("Carlos");
     nomes.add("Henrique");
-    nomes.add("Eduardo");
 
-    System.out.println(nomes);
-
-    String nomeProcurado = "Luiz";
+    String nomeProcurado = "Rita";
 
     if (nomes.isEmpty()) {
-      System.out.println("Lista vazia");
+      System.out.println("A lista está vazia!");
     } else {
+      System.out.println("A lista tem tamanho: " + nomes.size());
       // boolean achou = false;
       // for(String s : nomes) {
-      // System.out.println(s);
-      // if (s.equalsIgnoreCase(nomeProcurado)) {
+      // if(s.equalsIgnoreCase(nomeProcurado)) {
       // achou = true;
       // }
       // }
-      // if (achou == true) {
-      // System.out.println(nomeProcurado + " esta na lista");
-      // } else {
-      // System.out.println(nomeProcurado + " n esta na lista");
+      // if(achou == true) {
+      // System.out.println(nomeProcurado + " está na lista");
+      // }
+      // else {
+      // System.out.println(nomeProcurado + " não está na lista.");
       // }
 
-      System.out.println("tamanho da lista " + nomes.size());
-
       if (nomes.contains(nomeProcurado)) {
-        System.out.println(nomeProcurado + " esta na lista");
+        System.out.println(nomeProcurado + " está na lista");
       } else {
-        System.out.println(nomeProcurado + " n encontrado");
+        System.out.println(nomeProcurado + " não está na lista.");
       }
+
+      nomes.set(1, "Marcos");
+
     }
 
-    nomes.set(1, "Davi");
-    System.out.println(nomes);
   }
 }
