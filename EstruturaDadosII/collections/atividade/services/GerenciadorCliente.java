@@ -2,11 +2,9 @@ package EstruturaDadosII.collections.atividade.services;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import EstruturaDadosII.collections.atividade.models.Cliente;
 
 public class GerenciadorCliente {
-  private Scanner scanner = new Scanner(System.in);
 
   private List<Cliente> clientes;
 

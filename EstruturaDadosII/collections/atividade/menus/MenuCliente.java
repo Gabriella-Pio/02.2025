@@ -24,6 +24,7 @@ public class MenuCliente {
 
       opcao = scanner.nextInt();
       scanner.nextLine(); // Limpar buffer
+      System.out.println('\n');
 
       switch (opcao) {
         case 1:
