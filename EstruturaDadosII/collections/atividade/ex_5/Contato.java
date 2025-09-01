@@ -1,4 +1,4 @@
-package EstruturaDadosII.collections.atividade.cinco;
+package EstruturaDadosII.collections.atividade.ex_5;
 
 public class Contato {
   private String nome;

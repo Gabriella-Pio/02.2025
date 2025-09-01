@@ -1,10 +1,12 @@
-package EstruturaDadosII.collections.atividade.cinco;
+package EstruturaDadosII.collections.atividade.ex_5;
 
 import java.util.Scanner;
+
+import EstruturaDadosII.collections.atividade.ex_5.Agenda;
+import EstruturaDadosII.collections.atividade.ex_5.Contato;
+
 import java.util.ArrayList;
 import java.util.List;
-import EstruturaDadosII.collections.atividade.cinco.Agenda;
-import EstruturaDadosII.collections.atividade.cinco.Contato;
 
 public class main {
   private static Scanner scanner = new Scanner(System.in);
