@@ -1,5 +1,13 @@
 package gui;
+
 import javax.swing.*;
+
+import arvore.AVLTree;
+import arvore.BSTree;
+import arvore.NodeInfo;
+import arvore.TreeStats;
+import tokenizer.TextTokenizer;
+import vetor.DynamicWordFrequencyVector;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -17,13 +25,13 @@ public class TextAnalyzerGUI extends JFrame {
 
     // ====== COMPONENTES DA INTERFACE ======
     // Estes são os "painéis" que compõem nossa janela
-    private FilePanel filePanel;           // Painel para seleção de arquivo
-    private ConfigPanel configPanel;       // Painel de configurações
-    private ResultsPanel resultsPanel;     // Painel para mostrar resultados
-    private JProgressBar progressBar;      // Barra de progresso
+    private FilePanel filePanel; // Painel para seleção de arquivo
+    private ConfigPanel configPanel; // Painel de configurações
+    private ResultsPanel resultsPanel; // Painel para mostrar resultados
+    private JProgressBar progressBar; // Barra de progresso
 
     // ====== DADOS DA APLICAÇÃO ======
-    private File selectedFile;             // Arquivo selecionado pelo usuário
+    private File selectedFile; // Arquivo selecionado pelo usuário
 
     /**
      * CONSTRUTOR - É executado quando criamos a janela
@@ -83,8 +91,8 @@ public class TextAnalyzerGUI extends JFrame {
 
         // Criar a barra de progresso
         progressBar = new JProgressBar();
-        progressBar.setStringPainted(true);  // Mostrar texto na barra
-        progressBar.setVisible(false);       // Inicialmente invisível
+        progressBar.setStringPainted(true); // Mostrar texto na barra
+        progressBar.setVisible(false); // Inicialmente invisível
     }
 
     /**
@@ -114,8 +122,7 @@ public class TextAnalyzerGUI extends JFrame {
 
         // Adicionar uma "moldura" interna de 15px
         ((JComponent) getContentPane()).setBorder(
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        );
+                BorderFactory.createEmptyBorder(15, 15, 15, 15));
     }
 
     /**
@@ -147,14 +154,32 @@ public class TextAnalyzerGUI extends JFrame {
         filePanel.setFileSelectionListener(new FileSelectionListener() {
             @Override
             public void onFileSelected(File file) {
-                // Quando um arquivo é selecionado...
-                selectedFile = file;
+                try {
+                    TextTokenizer tokenizer = new TextTokenizer("src/resources/stopwords.txt");
+                    tokenizer.loadTextFile(file.getAbsolutePath());
 
-                // Habilitar o botão de análise
-                configPanel.setAnalyzeButtonEnabled(true);
+                    // String[] palavras = tokenizer.tokenizeToArray(tokenizer.TEXT);
 
-                // Mostrar mensagem de sucesso
-                showMessage("✅ Arquivo selecionado: " + file.getName());
+                    // // Aqui você pode chamar os algoritmos
+                    // DynamicWordFrequencyVector vetor = new DynamicWordFrequencyVector();
+                    // TreeStats statsVetor = vetor.buildWithStats(palavras);
+
+                    // E atualizar a ResultsPanel, por exemplo
+                    // resultsPanel.showResults(vetor, statsVetor);
+
+                    // Quando um arquivo é selecionado...
+                    selectedFile = file;
+
+                    // Habilitar o botão de análise
+                    configPanel.setAnalyzeButtonEnabled(true);
+
+                    // Mostrar mensagem de sucesso
+                    showMessage("✅ Arquivo selecionado: " + file.getName());
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(null,
+                            "Erro ao processar arquivo: " + e.getMessage(),
+                            "Erro", JOptionPane.ERROR_MESSAGE);
+                }
             }
 
             @Override
@@ -197,7 +222,83 @@ public class TextAnalyzerGUI extends JFrame {
 
         // Aqui você conectaria com seu backend
         // Por enquanto, vamos simular uma análise
-        simulateAnalysis();
+        // simulateAnalysis();
+
+        SwingWorker<Void, String> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                try {
+                    // 1. Tokenizar texto
+                    TextTokenizer tokenizer = new TextTokenizer("src/resources/stopwords.txt");
+                    tokenizer.loadTextFile(selectedFile.getAbsolutePath());
+                    String[] palavras = tokenizer.tokenizeToArray(tokenizer.TEXT);
+
+                    int escolha = configPanel.getSelectedStructureIndex();
+
+                    // 2. Executar estrutura escolhida
+                    if (escolha == 0) { // Vetor dinâmico
+                        // publish("Executando Busca Binária (Vetor Dinâmico)...");
+                        DynamicWordFrequencyVector vetor = new DynamicWordFrequencyVector();
+                        TreeStats stats = vetor.buildWithStats(palavras);
+                        resultsPanel.addHeader("Resultados - Vetor Dinâmico");
+                        vetor.displayWordFrequencies(); // no console
+                        resultsPanel.showWordFrequencies(vetor.getFrequenciesAsList().stream()
+                                .map(line -> String.format("%-20s %5s", line.split(" -> ")[0], line.split(" -> ")[1]))
+                                .toList());
+                        resultsPanel.addSeparator();
+                        resultsPanel.addResult(stats.toString());
+
+                    } else if (escolha == 1) { // BST
+                        // publish("Executando Árvore BST...");
+                        BSTree bst = new BSTree();
+                        TreeStats stats = bst.buildWithStats(palavras);
+                        resultsPanel.addHeader("Resultados - BST");
+                        bst.inOrderTraversal(); // no console
+                        resultsPanel.showWordFrequencies(bst.getFrequenciesAsList().stream()
+                                .map(line -> String.format("%-20s %5s", line.split(" -> ")[0], line.split(" -> ")[1]))
+                                .toList());
+                        resultsPanel.addSeparator();
+                        resultsPanel.addResult(stats.toString());
+                        resultsPanel.addSeparator();
+                        resultsPanel.showTree(bst.getNodesWithLevel());
+
+                    } else if (escolha == 2) { // AVL
+                        // publish("Executando Árvore AVL...");
+                        AVLTree avl = new AVLTree();
+                        TreeStats stats = avl.buildWithStats(palavras);
+                        resultsPanel.addHeader("Resultados - AVL");
+                        avl.inOrderTraversal(); // no console
+                        resultsPanel.showWordFrequencies(avl.getFrequenciesAsList().stream()
+                                .map(line -> String.format("%-20s %5s", line.split(" -> ")[0], line.split(" -> ")[1]))
+                                .toList());
+                        resultsPanel.addSeparator();
+                        resultsPanel.addResult(stats.toString());
+                        resultsPanel.addSeparator();
+                        resultsPanel.showTree(avl.getNodesWithLevel());
+                    }
+
+                    publish("✅ Análise concluída!");
+                } catch (Exception e) {
+                    publish("❌ Erro durante análise: " + e.getMessage());
+                }
+                return null;
+            }
+
+            @Override
+            protected void process(java.util.List<String> chunks) {
+                for (String message : chunks) {
+                    resultsPanel.addResult(message);
+                }
+            }
+
+            @Override
+            protected void done() {
+                progressBar.setVisible(false);
+                configPanel.setAnalyzeButtonEnabled(true);
+            }
+        };
+
+        worker.execute();
     }
 
     /**

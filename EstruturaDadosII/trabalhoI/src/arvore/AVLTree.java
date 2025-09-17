@@ -6,9 +6,9 @@ import java.util.List;
 // Classe que implementa uma Árvore AVL (BST balanceada)
 // Mantém a propriedade de balanceamento para garantir altura log(n)
 public class AVLTree {
-    private Node raiz;                  // raiz da árvore
-    private long comparacoes = 0;       // contador de comparações
-    private long atribuicoes = 0;       // contador de atribuições
+    private Node raiz; // raiz da árvore
+    private long comparacoes = 0; // contador de comparações
+    private long atribuicoes = 0; // contador de atribuições
 
     // Inserção pública que delega para o método recursivo
     public void insert(String palavra) {
@@ -17,22 +17,22 @@ public class AVLTree {
 
     // Inserção recursiva na AVL
     private Node insertRec(Node node, String palavra) {
-        if (node == null) {              // se não existe nó, cria um novo
+        if (node == null) { // se não existe nó, cria um novo
             atribuicoes++;
             return new Node(palavra);
         }
 
-        comparacoes++;                   // conta comparação
+        comparacoes++; // conta comparação
         int cmp = palavra.compareTo(node.palavra);
 
-        if (cmp < 0) {                   // vai para a esquerda
+        if (cmp < 0) { // vai para a esquerda
             node.esquerda = insertRec(node.esquerda, palavra);
-        } else if (cmp > 0) {            // vai para a direita
+        } else if (cmp > 0) { // vai para a direita
             node.direita = insertRec(node.direita, palavra);
-        } else {                         // já existe, incrementa frequência
+        } else { // já existe, incrementa frequência
             atribuicoes++;
             node.frequencia++;
-            return node;                 // retorna nó existente sem balancear
+            return node; // retorna nó existente sem balancear
         }
 
         // Atualiza altura do nó
@@ -61,7 +61,7 @@ public class AVLTree {
             return rotateLeft(node);
         }
 
-        return node;                     // retorna o nó após balanceamento
+        return node; // retorna o nó após balanceamento
     }
 
     // Retorna altura de um nó (0 se nulo)
@@ -120,16 +120,30 @@ public class AVLTree {
     // Constrói a árvore a partir do vetor de palavras e retorna estatísticas
     public TreeStats buildWithStats(String[] palavras) {
         long inicio = System.nanoTime();
-        for (String p : palavras) insert(p);
+        for (String p : palavras)
+            insert(p);
         long fim = System.nanoTime();
         long tempoExecucao = (fim - inicio); // converte para ms
         return new TreeStats(comparacoes, atribuicoes, tempoExecucao);
     }
 
-    
     // -------------------------
     // Métodos para GUI
     // -------------------------
+
+    public java.util.List<String> getFrequenciesAsList() {
+        java.util.List<String> result = new java.util.ArrayList<>();
+        inOrderToList(raiz, result);
+        return result;
+    }
+
+    private void inOrderToList(Node node, java.util.List<String> result) {
+        if (node != null) {
+            inOrderToList(node.esquerda, result);
+            result.add(node.palavra + " -> " + node.frequencia);
+            inOrderToList(node.direita, result);
+        }
+    }
 
     public Node getRaiz() {
         return raiz;

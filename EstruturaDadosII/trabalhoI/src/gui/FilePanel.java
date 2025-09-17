@@ -1,4 +1,5 @@
 package gui;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -19,12 +20,12 @@ import java.io.File;
 public class FilePanel extends JPanel {
 
     // ====== COMPONENTES VISUAIS ======
-    private JButton selectButton;           // Botão "Selecionar Arquivo"
-    private JLabel fileNameLabel;          // Label que mostra o nome do arquivo
-    private JLabel fileSizeLabel;          // Label que mostra o tamanho do arquivo
+    private JButton selectButton; // Botão "Selecionar Arquivo"
+    private JLabel fileNameLabel; // Label que mostra o nome do arquivo
+    private JLabel fileSizeLabel; // Label que mostra o tamanho do arquivo
 
     // ====== DADOS ======
-    private File selectedFile;             // Arquivo atualmente selecionado
+    private File selectedFile; // Arquivo atualmente selecionado
     private FileSelectionListener listener; // "Ouvinte" para avisar quando arquivo for selecionado
 
     /**
@@ -48,10 +49,10 @@ public class FilePanel extends JPanel {
 
         // Personalizar o botão
         selectButton.setBackground(new Color(0, 123, 255)); // Azul
-        selectButton.setForeground(Color.WHITE);            // Texto branco
-        selectButton.setFocusPainted(false);                // Sem borda de foco
-        selectButton.setBorderPainted(false);               // Sem borda
-        selectButton.setOpaque(true);                       // Cor de fundo visível
+        selectButton.setForeground(Color.WHITE); // Texto branco
+        selectButton.setFocusPainted(false); // Sem borda de foco
+        selectButton.setBorderPainted(false); // Sem borda
+        selectButton.setOpaque(true); // Cor de fundo visível
 
         // Label para mostrar nome do arquivo
         fileNameLabel = new JLabel("Nenhum arquivo selecionado");
@@ -125,8 +126,7 @@ public class FilePanel extends JPanel {
 
         // Filtro para mostrar apenas arquivos .txt
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                "Arquivos de Texto (*.txt)", "txt"
-        );
+                "Arquivos de Texto (*.txt)", "txt");
         fileChooser.setFileFilter(filter);
         fileChooser.setAcceptAllFileFilterUsed(false); // Não permitir "todos os tipos"
 
