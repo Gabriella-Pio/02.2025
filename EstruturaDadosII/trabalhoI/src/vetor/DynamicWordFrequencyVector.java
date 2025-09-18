@@ -37,8 +37,8 @@ class WordFrequency {
 
 public class DynamicWordFrequencyVector {
     private final List<WordFrequency> vector;
-    private long comparacoes;
-    private long atribuicoes;
+    private int comparacoes;
+    private int atribuicoes;
 
     public DynamicWordFrequencyVector() {
         this.vector = new ArrayList<>();
@@ -129,7 +129,7 @@ public class DynamicWordFrequencyVector {
         long endTime = System.currentTimeMillis();
         long processingTime = endTime - startTime;
 
-        TreeStats stats = new TreeStats(comparacoes, atribuicoes, processingTime);
+        TreeStats stats = new TreeStats(comparacoes, atribuicoes, processingTime,0);
         System.out.println("\n=== ESTATÍSTICAS ===");
         System.out.println(stats);
     }
@@ -160,12 +160,22 @@ public class DynamicWordFrequencyVector {
     }
 
     // Constrói a busca a partir do vetor de palavras e retorna estatísticas
-    public TreeStats buildWithStats(String[] palavras) {
+public TreeStats buildWithStats(String[] palavras) {
+        // RESET counters before starting
+        resetAnalise();
+        
         long inicio = System.nanoTime();
-        for (String p : palavras)
+        for (String p : palavras) {
             insertOrUpdate(p);
+        }
         long fim = System.nanoTime();
-        long tempoExecucao = (fim - inicio); // converte para ms
-        return new TreeStats(comparacoes, atribuicoes, tempoExecucao);
+        double tempoExecucao = (fim - inicio) / 1_000_000.0;
+        
+        return new TreeStats(comparacoes, atribuicoes, 0, tempoExecucao, 0);
+    }
+    
+    public void resetAnalise() {
+        comparacoes = 0;
+        atribuicoes = 0;
     }
 }

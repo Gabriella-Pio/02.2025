@@ -7,129 +7,201 @@ import java.util.List;
 // Mantém a propriedade de balanceamento para garantir altura log(n)
 public class AVLTree {
     private Node raiz; // raiz da árvore
-    private long comparacoes = 0; // contador de comparações
-    private long atribuicoes = 0; // contador de atribuições
+    private int comparacoes = 0; // contador de comparações
+    private int atribuicoes = 0; // contador de atribuições
+    private int rotacoes = 0; // contador de atribuições
 
     // Inserção pública que delega para o método recursivo
-    public void insert(String palavra) {
-        raiz = insertRec(raiz, palavra);
+    public void insertAVL(String palavra) {
+        raiz = insertAVLRec(raiz, palavra, null);
     }
 
-    // Inserção recursiva na AVL
-    private Node insertRec(Node node, String palavra) {
-        if (node == null) { // se não existe nó, cria um novo
+    private Node insertAVLRec(Node node, String palavra, Node parent) {
+        if (node == null) {
             atribuicoes++;
-            return new Node(palavra);
+            Node newNode = new Node(palavra);
+            newNode.pai = parent;
+
+            if (parent != null) {
+                if (parent.filhos == null) {
+                    parent.filhos = new ArrayList<>();
+                }
+                parent.filhos.add(newNode);
+            }
+            return newNode;
         }
 
-        comparacoes++; // conta comparação
+        comparacoes++;
         int cmp = palavra.compareTo(node.palavra);
 
-        if (cmp < 0) { // vai para a esquerda
-            node.esquerda = insertRec(node.esquerda, palavra);
-        } else if (cmp > 0) { // vai para a direita
-            node.direita = insertRec(node.direita, palavra);
-        } else { // já existe, incrementa frequência
+        if (cmp < 0) {
+            Node leftChild = findOrCreateChildPosition(node, palavra, true);
+            leftChild = insertAVLRec(leftChild, palavra, node);
+            updateChildrenList(node, leftChild);
+        } else if (cmp > 0) {
+            Node rightChild = findOrCreateChildPosition(node, palavra, false);
+            rightChild = insertAVLRec(rightChild, palavra, node);
+            updateChildrenList(node, rightChild);
+        } else {
             atribuicoes++;
             node.frequencia++;
-            return node; // retorna nó existente sem balancear
+            return node;
         }
 
-        // Atualiza altura do nó
-        node.altura = 1 + Math.max(altura(node.esquerda), altura(node.direita));
+        // Update height
+        node.altura = 1 + Math.max(getHeight(getLeftChild(node)), getHeight(getRightChild(node)));
 
-        // Calcula fator de balanceamento
+        // Check balance
         int balance = getBalance(node);
 
-        // Rotação simples à direita
-        if (balance > 1 && palavra.compareTo(node.esquerda.palavra) < 0)
-            return rotateRight(node);
-
-        // Rotação simples à esquerda
-        if (balance < -1 && palavra.compareTo(node.direita.palavra) > 0)
-            return rotateLeft(node);
-
-        // Rotação dupla esquerda-direita
-        if (balance > 1 && palavra.compareTo(node.esquerda.palavra) > 0) {
-            node.esquerda = rotateLeft(node.esquerda);
-            return rotateRight(node);
+        // AVL Rotations - COUNT THESE!
+        if (balance > 1 && palavra.compareTo(getLeftChild(node).palavra) < 0) {
+            rotacoes++; // Count rotation
+            return rotateRight(node, parent);
+        }
+        if (balance < -1 && palavra.compareTo(getRightChild(node).palavra) > 0) {
+            rotacoes++; // Count rotation
+            return rotateLeft(node, parent);
+        }
+        if (balance > 1 && palavra.compareTo(getLeftChild(node).palavra) > 0) {
+            rotacoes += 2; // Count double rotation
+            Node leftChild = getLeftChild(node);
+            leftChild = rotateLeft(leftChild, node);
+            updateChildrenList(node, leftChild);
+            return rotateRight(node, parent);
+        }
+        if (balance < -1 && palavra.compareTo(getRightChild(node).palavra) < 0) {
+            rotacoes += 2; // Count double rotation
+            Node rightChild = getRightChild(node);
+            rightChild = rotateRight(rightChild, node);
+            updateChildrenList(node, rightChild);
+            return rotateLeft(node, parent);
         }
 
-        // Rotação dupla direita-esquerda
-        if (balance < -1 && palavra.compareTo(node.direita.palavra) < 0) {
-            node.direita = rotateRight(node.direita);
-            return rotateLeft(node);
+        return node;
+    }
+
+    // findOrCreateChildPosition implementation
+    private Node findOrCreateChildPosition(Node parent, String palavra, boolean isLeft) {
+        if (parent.filhos == null) {
+            return null; // Will be created in recursion
         }
 
-        return node; // retorna o nó após balanceamento
-    }
+        // Look for existing child that should be in this position
+        for (Node child : parent.filhos) {
+            int cmp = palavra.compareTo(child.palavra);
+            boolean isCorrectPosition = (isLeft && cmp < 0 && child.palavra.compareTo(parent.palavra) < 0) ||
+                    (!isLeft && cmp > 0 && child.palavra.compareTo(parent.palavra) > 0);
 
-    // Retorna altura de um nó (0 se nulo)
-    private int altura(Node n) {
-        return (n == null) ? 0 : n.altura;
-    }
-
-    // Retorna fator de balanceamento (altura esquerda - altura direita)
-    private int getBalance(Node n) {
-        return (n == null) ? 0 : altura(n.esquerda) - altura(n.direita);
-    }
-
-    // Rotação simples à direita
-    private Node rotateRight(Node y) {
-        atribuicoes++;
-        Node x = y.esquerda;
-        Node T2 = x.direita;
-
-        x.direita = y;
-        y.esquerda = T2;
-
-        y.altura = Math.max(altura(y.esquerda), altura(y.direita)) + 1;
-        x.altura = Math.max(altura(x.esquerda), altura(x.direita)) + 1;
-
-        return x; // novo nó raiz da subárvore
-    }
-
-    // Rotação simples à esquerda
-    private Node rotateLeft(Node x) {
-        atribuicoes++;
-        Node y = x.direita;
-        Node T2 = y.esquerda;
-
-        y.esquerda = x;
-        x.direita = T2;
-
-        x.altura = Math.max(altura(x.esquerda), altura(x.direita)) + 1;
-        y.altura = Math.max(altura(y.esquerda), altura(y.direita)) + 1;
-
-        return y; // novo nó raiz da subárvore
-    }
-
-    // Impressão em ordem alfabética
-    public void inOrderTraversal() {
-        inOrderRec(raiz);
-    }
-
-    private void inOrderRec(Node node) {
-        if (node != null) {
-            inOrderRec(node.esquerda);
-            System.out.println(node.palavra + " -> " + node.frequencia);
-            inOrderRec(node.direita);
+            if (isCorrectPosition) {
+                return child;
+            }
         }
+
+        return null; // No suitable child found, will be created in recursion
     }
 
-    // Constrói a árvore a partir do vetor de palavras e retorna estatísticas
-    public TreeStats buildWithStats(String[] palavras) {
-        long inicio = System.nanoTime();
-        for (String p : palavras)
-            insert(p);
-        long fim = System.nanoTime();
-        long tempoExecucao = (fim - inicio); // converte para ms
-        return new TreeStats(comparacoes, atribuicoes, tempoExecucao);
+    // Helper methods for AVL
+    private int getHeight(Node node) {
+        return node == null ? 0 : node.altura;
     }
 
-    // -------------------------
-    // Métodos para GUI
-    // -------------------------
+    private int getBalance(Node node) {
+        if (node == null)
+            return 0;
+        return getHeight(getLeftChild(node)) - getHeight(getRightChild(node));
+    }
+
+    private Node getLeftChild(Node node) {
+        if (node == null || node.filhos == null)
+            return null;
+
+        Node leftChild = null;
+        for (Node child : node.filhos) {
+            if (child.palavra.compareTo(node.palavra) < 0) {
+                if (leftChild == null || child.palavra.compareTo(leftChild.palavra) > 0) {
+                    leftChild = child;
+                }
+            }
+        }
+        return leftChild;
+    }
+
+    private Node getRightChild(Node node) {
+        if (node == null || node.filhos == null)
+            return null;
+
+        Node rightChild = null;
+        for (Node child : node.filhos) {
+            if (child.palavra.compareTo(node.palavra) > 0) {
+                if (rightChild == null || child.palavra.compareTo(rightChild.palavra) < 0) {
+                    rightChild = child;
+                }
+            }
+        }
+        return rightChild;
+    }
+
+    private void updateChildrenList(Node parent, Node child) {
+        if (parent.filhos == null) {
+            parent.filhos = new ArrayList<>();
+        }
+        if (!parent.filhos.contains(child)) {
+            parent.filhos.add(child);
+        }
+        child.pai = parent;
+    }
+
+    // Rotation methods for AVL
+    private Node rotateRight(Node y, Node parent) {
+        Node x = getLeftChild(y);
+        if (x == null)
+            return y;
+
+        Node T2 = getRightChild(x);
+
+        // Perform rotation
+        updateChildrenRelations(x, y, false); // x becomes parent of y
+        if (T2 != null)
+            updateChildrenRelations(y, T2, true); // y gets T2 as left child
+
+        // Update heights
+        y.altura = Math.max(getHeight(getLeftChild(y)), getHeight(getRightChild(y))) + 1;
+        x.altura = Math.max(getHeight(getLeftChild(x)), getHeight(getRightChild(x))) + 1;
+
+        // Update parent relationship
+        x.pai = parent;
+        if (parent != null) {
+            updateChildrenList(parent, x);
+        }
+
+        return x;
+    }
+
+    private Node rotateLeft(Node x, Node parent) {
+        Node y = getRightChild(x);
+        if (y == null)
+            return x;
+
+        Node T2 = getLeftChild(y);
+
+        // Perform rotation
+        updateChildrenRelations(y, x, true); // y becomes parent of x
+        if (T2 != null)
+            updateChildrenRelations(x, T2, false); // x gets T2 as right child
+
+        // Update heights
+        x.altura = Math.max(getHeight(getLeftChild(x)), getHeight(getRightChild(x))) + 1;
+        y.altura = Math.max(getHeight(getLeftChild(y)), getHeight(getRightChild(y))) + 1;
+
+        // Update parent relationship
+        y.pai = parent;
+        if (parent != null) {
+            updateChildrenList(parent, y);
+        }
+
+        return y;
+    }
 
     public java.util.List<String> getFrequenciesAsList() {
         java.util.List<String> result = new java.util.ArrayList<>();
@@ -139,27 +211,98 @@ public class AVLTree {
 
     private void inOrderToList(Node node, java.util.List<String> result) {
         if (node != null) {
-            inOrderToList(node.esquerda, result);
+            // Process left subtree (children with smaller values)
+            Node leftChild = getLeftChild(node);
+            if (leftChild != null) {
+                inOrderToList(leftChild, result);
+            }
+
+            // Process current node
             result.add(node.palavra + " -> " + node.frequencia);
-            inOrderToList(node.direita, result);
+
+            // Process right subtree (children with larger values)
+            Node rightChild = getRightChild(node);
+            if (rightChild != null) {
+                inOrderToList(rightChild, result);
+            }
         }
     }
 
-    public Node getRaiz() {
-        return raiz;
+    private void updateChildrenRelations(Node newParent, Node newChild, boolean asLeftChild) {
+        // Remove newChild from its current parent's children list
+        if (newChild.pai != null && newChild.pai.filhos != null) {
+            newChild.pai.filhos.remove(newChild);
+        }
+
+        // Add newChild to newParent's children list
+        if (newParent.filhos == null) {
+            newParent.filhos = new ArrayList<>();
+        }
+        if (!newParent.filhos.contains(newChild)) {
+            newParent.filhos.add(newChild);
+        }
+        newChild.pai = newParent;
+    }
+
+    public TreeStats buildWithStats(String[] palavras) {
+        resetAnalise();
+        long startTime = System.nanoTime();
+
+        for (String palavra : palavras) {
+            raiz = insertAVLRec(raiz, palavra, null);
+        }
+
+        long endTime = System.nanoTime();
+        double tempo = (endTime - startTime) / 1_000_000.0; // ms
+
+        return new TreeStats(comparacoes, atribuicoes, rotacoes, tempo, getAltura());
+    }
+
+    public int getComparacoes() {
+        return comparacoes;
+    }
+
+    public int getAtribuicoes() {
+        return atribuicoes;
+    }
+
+    public int getRotacoes() {
+        return rotacoes;
+    }
+
+    public void resetAnalise() {
+        comparacoes = 0;
+        atribuicoes = 0;
+        rotacoes = 0;
+    }
+
+    public int getAltura() {
+        return getAltura(raiz);
+    }
+
+    private int getAltura(Node node) {
+        if (node == null)
+            return 0;
+        return node.altura;
     }
 
     public List<NodeInfo> getNodesWithLevel() {
         List<NodeInfo> lista = new ArrayList<>();
-        preencherLista(raiz, 0, lista);
+        preencherListaComPai(raiz, null, 0, lista);
         return lista;
     }
 
-    private void preencherLista(Node node, int nivel, List<NodeInfo> lista) {
+    private void preencherListaComPai(Node node, Node parent, int nivel, List<NodeInfo> lista) {
         if (node != null) {
-            lista.add(new NodeInfo(node, nivel));
-            preencherLista(node.esquerda, nivel + 1, lista);
-            preencherLista(node.direita, nivel + 1, lista);
+            NodeInfo nodeInfo = new NodeInfo(node, nivel);
+            nodeInfo.pai = parent; // Set parent reference
+            lista.add(nodeInfo);
+
+            if (node.filhos != null) {
+                for (Node child : node.filhos) {
+                    preencherListaComPai(child, node, nivel + 1, lista);
+                }
+            }
         }
     }
 }

@@ -225,64 +225,50 @@ public class TextAnalyzerGUI extends JFrame {
         // simulateAnalysis();
 
         SwingWorker<Void, String> worker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() {
-                try {
-                    // 1. Tokenizar texto
-                    TextTokenizer tokenizer = new TextTokenizer("src/resources/stopwords.txt");
-                    tokenizer.loadTextFile(selectedFile.getAbsolutePath());
-                    String[] palavras = tokenizer.tokenizeToArray(tokenizer.TEXT);
+        @Override
+        protected Void doInBackground() {
+            try {
+                TextTokenizer tokenizer = new TextTokenizer("src/resources/stopwords.txt");
+                tokenizer.loadTextFile(selectedFile.getAbsolutePath());
+                String[] palavras = tokenizer.tokenizeToArray(tokenizer.TEXT);
 
-                    int escolha = configPanel.getSelectedStructureIndex();
+                int escolha = configPanel.getSelectedStructureIndex();
 
-                    // 2. Executar estrutura escolhida
-                    if (escolha == 0) { // Vetor dinâmico
-                        // publish("Executando Busca Binária (Vetor Dinâmico)...");
-                        DynamicWordFrequencyVector vetor = new DynamicWordFrequencyVector();
-                        TreeStats stats = vetor.buildWithStats(palavras);
-                        resultsPanel.addHeader("Resultados - Vetor Dinâmico");
-                        vetor.displayWordFrequencies(); // no console
-                        resultsPanel.showWordFrequencies(vetor.getFrequenciesAsList().stream()
-                                .map(line -> String.format("%-20s %5s", line.split(" -> ")[0], line.split(" -> ")[1]))
-                                .toList());
-                        resultsPanel.addSeparator();
-                        resultsPanel.addResult(stats.toString());
+                if (escolha == 0) { // Vetor dinâmico
+                    publish("Executando Vetor Dinâmico...");
+                    DynamicWordFrequencyVector vetor = new DynamicWordFrequencyVector();
+                    TreeStats stats = vetor.buildWithStats(palavras);
+                    resultsPanel.addHeader("Resultados - Vetor Dinâmico");
+                    resultsPanel.showWordFrequencies(vetor.getFrequenciesAsList());
+                    resultsPanel.showAnalysis(stats, "Vetor Dinâmico");
 
-                    } else if (escolha == 1) { // BST
-                        // publish("Executando Árvore BST...");
-                        BSTree bst = new BSTree();
-                        TreeStats stats = bst.buildWithStats(palavras);
-                        resultsPanel.addHeader("Resultados - BST");
-                        bst.inOrderTraversal(); // no console
-                        resultsPanel.showWordFrequencies(bst.getFrequenciesAsList().stream()
-                                .map(line -> String.format("%-20s %5s", line.split(" -> ")[0], line.split(" -> ")[1]))
-                                .toList());
-                        resultsPanel.addSeparator();
-                        resultsPanel.addResult(stats.toString());
-                        resultsPanel.addSeparator();
-                        resultsPanel.showTree(bst.getNodesWithLevel());
+                } else if (escolha == 1) { // BST
+                    publish("Executando Árvore BST...");
+                    BSTree bst = new BSTree();
+                    TreeStats stats = bst.buildWithStats(palavras);
+                    resultsPanel.addHeader("Resultados - BST");
+                    resultsPanel.showWordFrequencies(bst.getFrequenciesAsList());
+                    resultsPanel.showAnalysis(stats, "BST");
+                    resultsPanel.showTree(bst.getNodesWithLevel());
 
-                    } else if (escolha == 2) { // AVL
-                        // publish("Executando Árvore AVL...");
-                        AVLTree avl = new AVLTree();
-                        TreeStats stats = avl.buildWithStats(palavras);
-                        resultsPanel.addHeader("Resultados - AVL");
-                        avl.inOrderTraversal(); // no console
-                        resultsPanel.showWordFrequencies(avl.getFrequenciesAsList().stream()
-                                .map(line -> String.format("%-20s %5s", line.split(" -> ")[0], line.split(" -> ")[1]))
-                                .toList());
-                        resultsPanel.addSeparator();
-                        resultsPanel.addResult(stats.toString());
-                        resultsPanel.addSeparator();
-                        resultsPanel.showTree(avl.getNodesWithLevel());
-                    }
-
-                    publish("✅ Análise concluída!");
-                } catch (Exception e) {
-                    publish("❌ Erro durante análise: " + e.getMessage());
+                } else if (escolha == 2) { // AVL
+                    publish("Executando Árvore AVL...");
+                    AVLTree avl = new AVLTree();
+                    TreeStats stats = avl.buildWithStats(palavras);
+                    resultsPanel.addHeader("Resultados - AVL");
+                    resultsPanel.showWordFrequencies(avl.getFrequenciesAsList());
+                    resultsPanel.showAnalysis(stats, "AVL");
+                    resultsPanel.showTree(avl.getNodesWithLevel());
                 }
-                return null;
+
+                publish("✅ Análise concluída!");
+
+            } catch (Exception e) {
+                publish("❌ Erro durante análise: " + e.getMessage());
+                e.printStackTrace();
             }
+            return null;
+        }
 
             @Override
             protected void process(java.util.List<String> chunks) {

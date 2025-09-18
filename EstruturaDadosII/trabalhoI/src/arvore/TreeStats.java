@@ -1,27 +1,44 @@
 package arvore;
 
-// Classe para armazenar estatísticas de desempenho da árvore
 public class TreeStats {
-    private long comparacoes;       // contador de comparações de chaves
-    private long atribuicoes;       // contador de atribuições (novos nós ou incrementos)
-    private long tempoExecucao;     // tempo de execução em milissegundos
-
-    // Construtor inicializa os valores
-    public TreeStats(long comparacoes, long atribuicoes, long tempoExecucao) {
+    private int comparacoes;
+    private int atribuicoes;
+    private int rotacoes;
+    private double tempoMilissegundos;
+    private int altura;
+    
+    public TreeStats(int comparacoes, int atribuicoes, double tempoMilissegundos, int altura) {
+        this(comparacoes, atribuicoes, 0, tempoMilissegundos, altura);
+    }
+    
+    public TreeStats(int comparacoes, int atribuicoes, int rotacoes, 
+                    double tempoMilissegundos, int altura) {
         this.comparacoes = comparacoes;
         this.atribuicoes = atribuicoes;
-        this.tempoExecucao = tempoExecucao;
+        this.rotacoes = rotacoes;
+        this.tempoMilissegundos = tempoMilissegundos;
+        this.altura = altura;
     }
-
-    public long getComparacoes() { return comparacoes; }
-    public long getAtribuicoes() { return atribuicoes; }
-    public long getTempoExecucao() { return tempoExecucao; }
-
-    // Método toString para imprimir facilmente as estatísticas
+    
     @Override
     public String toString() {
-        return "Comparações: " + comparacoes +
-               " | Atribuições: " + atribuicoes +
-               " | Tempo (ns): " + tempoExecucao;
+        return String.format(
+            "📊 ESTATÍSTICAS DA ESTRUTURA:\n" +
+            "• Comparações: %d\n" +
+            "• Atribuições: %d\n" +
+            "• Rotações: %d\n" +
+            "• Tempo de execução: %.2f ms\n" +
+            "• Altura da árvore: %d\n" +
+            "• Balanceada: %s",
+            comparacoes, atribuicoes, rotacoes, tempoMilissegundos, altura,
+            (rotacoes > 0) ? "Sim (AVL)" : "Não"
+        );
     }
+    
+    // Getters
+    public int getComparacoes() { return comparacoes; }
+    public int getAtribuicoes() { return atribuicoes; }
+    public int getRotacoes() { return rotacoes; }
+    public double getTempoMilissegundos() { return tempoMilissegundos; }
+    public int getAltura() { return altura; }
 }

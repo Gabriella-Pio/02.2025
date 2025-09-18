@@ -25,7 +25,6 @@ public class Principal {
         System.out.println("\n=== BST ===");
         BSTree bst = new BSTree();
         TreeStats statsBST = bst.buildWithStats(palavrasTeste);
-        bst.inOrderTraversal();
         System.out.println(statsBST);
 
         // -------------------------------
@@ -34,7 +33,6 @@ public class Principal {
         System.out.println("\n=== AVL ===");
         AVLTree avl = new AVLTree();
         TreeStats statsAVL = avl.buildWithStats(palavrasTeste);
-        avl.inOrderTraversal();
         System.out.println(statsAVL);
     }
 }

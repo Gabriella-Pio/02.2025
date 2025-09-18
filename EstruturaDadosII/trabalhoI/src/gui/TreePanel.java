@@ -7,21 +7,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
-/**
- * Painel que desenha a árvore a partir de uma lista de NodeInfo.
- * - Agrupa nós por nível (nivel em NodeInfo)
- * - Distribui nós de cada nível horizontalmente
- * - Desenha linhas entre pai e filhos (se houver)
- */
 public class TreePanel extends JPanel {
-    private List<NodeInfo> nodes; // lista enviada pela GUI
+    private List<NodeInfo> nodes;
     private int nodeRadius = 20;
     private int verticalSpacing = 80;
     private int topMargin = 20;
     private int horizontalPadding = 20;
+    private int horizontalScale = 50; // Scale factor for x coordinates
 
     public TreePanel() {
         setBackground(Color.WHITE);
@@ -29,12 +22,6 @@ public class TreePanel extends JPanel {
 
     public void setNodes(List<NodeInfo> nodes) {
         this.nodes = (nodes == null) ? Collections.emptyList() : new ArrayList<>(nodes);
-        // atualizar preferências de tamanho com base na profundidade
-        int maxLevel = nodes == null || nodes.isEmpty() ? 0 :
-                nodes.stream().mapToInt(n -> n.nivel).max().orElse(0);
-        int prefHeight = topMargin + (maxLevel + 2) * verticalSpacing;
-        // prefWidth deixamos dinâmico; altura ajustada para permitir rolagem vertical
-        setPreferredSize(new Dimension(Math.max(600, getWidth()), prefHeight));
         revalidate();
         repaint();
     }
@@ -42,76 +29,116 @@ public class TreePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (nodes == null || nodes.isEmpty()) return;
+        if (nodes == null || nodes.isEmpty())
+            return;
 
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Agrupar por nível (Map ordenado por chave)
-        Map<Integer, List<NodeInfo>> levels = new TreeMap<>();
+        // Find root node
+        Node root = findRoot(nodes);
+        if (root == null)
+            return;
+
+        // Apply Reingold-Tilford algorithm
+        DrawTree drawTree = TreeLayout.layout(root);
+        Map<Node, Point> coords = TreeLayout.getCoordinates(drawTree);
+
+        // Scale and position coordinates for display
+        scaleCoordinates(coords);
+
+        // Draw connections
+        drawConnections(g2, coords);
+
+        // Draw nodes
+        drawNodes(g2, coords);
+
+        g2.dispose();
+    }
+
+    private Node findRoot(List<NodeInfo> nodes) {
         for (NodeInfo ni : nodes) {
-            levels.computeIfAbsent(ni.nivel, k -> new ArrayList<>()).add(ni);
-        }
-
-        // mapa de posições: Node -> Point (x, y)
-        Map<Node, Point> coords = new HashMap<>();
-        int panelWidth = Math.max(getWidth(), 600);
-
-        // Para cada nível, distribui nodes uniformemente na largura disponível
-        for (Map.Entry<Integer, List<NodeInfo>> entry : levels.entrySet()) {
-            int level = entry.getKey();
-            List<NodeInfo> list = entry.getValue();
-            int n = list.size();
-            for (int i = 0; i < n; i++) {
-                // distribuição: (i+1)/(n+1) espaço para evitar bordas
-                int x = horizontalPadding + (int) ((long) (panelWidth - 2 * horizontalPadding) * (i + 1) / (n + 1.0));
-                int y = topMargin + level * verticalSpacing;
-                coords.put(list.get(i).node, new Point(x, y));
+            if (ni.nivel == 0) {
+                return ni.node;
             }
         }
+        return null;
+    }
 
-        // Desenhar ligações pai -> filho (linhas)
+    private void scaleCoordinates(Map<Node, Point> coords) {
+        // Find min and max x values for scaling
+        int minX = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int maxY = 0;
+
+        for (Point p : coords.values()) {
+            minX = Math.min(minX, p.x);
+            maxX = Math.max(maxX, p.x);
+            maxY = Math.max(maxY, p.y);
+        }
+
+        // Scale and position coordinates
+        int panelWidth = Math.max(getWidth(), 600);
+        int xRange = Math.max(1, maxX - minX);
+
+        for (Map.Entry<Node, Point> entry : coords.entrySet()) {
+            Point p = entry.getValue();
+            int scaledX = horizontalPadding + (int) ((p.x - minX) / (double) xRange *
+                    (panelWidth - 2 * horizontalPadding));
+            int scaledY = topMargin + p.y * verticalSpacing;
+            entry.setValue(new Point(scaledX, scaledY));
+        }
+
+        // Update preferred size
+        int prefHeight = topMargin + (maxY + 2) * verticalSpacing;
+        setPreferredSize(new Dimension(panelWidth, prefHeight));
+    }
+
+    private void drawConnections(Graphics2D g2, Map<Node, Point> coords) {
         g2.setColor(Color.GRAY);
         g2.setStroke(new BasicStroke(1.5f));
+
         for (NodeInfo ni : nodes) {
             Node node = ni.node;
             Point p = coords.get(node);
-            if (p == null) continue;
-            if (node.esquerda != null && coords.containsKey(node.esquerda)) {
-                Point c = coords.get(node.esquerda);
-                g2.drawLine(p.x, p.y, c.x, c.y);
-            }
-            if (node.direita != null && coords.containsKey(node.direita)) {
-                Point c = coords.get(node.direita);
-                g2.drawLine(p.x, p.y, c.x, c.y);
+            if (p == null)
+                continue;
+
+            // Draw lines to all children
+            if (node.filhos != null) {
+                for (Node child : node.filhos) {
+                    Point c = coords.get(child);
+                    if (c != null) {
+                        g2.drawLine(p.x, p.y, c.x, c.y);
+                    }
+                }
             }
         }
+    }
 
-        // Desenhar nós (círculos e labels)
+    private void drawNodes(Graphics2D g2, Map<Node, Point> coords) {
         g2.setFont(new Font("SansSerif", Font.PLAIN, 12));
+
         for (NodeInfo ni : nodes) {
             Point p = coords.get(ni.node);
-            if (p == null) continue;
+            if (p == null)
+                continue;
 
             int x = p.x;
             int y = p.y;
 
-            // círculo preenchido
+            // Draw node circle
             g2.setColor(new Color(200, 230, 255));
             g2.fillOval(x - nodeRadius, y - nodeRadius, nodeRadius * 2, nodeRadius * 2);
-
-            // contorno
             g2.setColor(Color.BLACK);
-            // g2.drawOval(x - nodeRadius, y - nodeRadius, nodeRadius * 2, nodeRadius * 2);
+            g2.drawOval(x - nodeRadius, y - nodeRadius, nodeRadius * 2, nodeRadius * 2);
 
-            // texto (palavra(freq))
+            // Draw label
             String label = ni.palavra + "(" + ni.frequencia + ")";
             FontMetrics fm = g2.getFontMetrics();
             int textWidth = fm.stringWidth(label);
             int textHeight = fm.getAscent();
             g2.drawString(label, x - textWidth / 2, y + textHeight / 2 - 2);
         }
-
-        g2.dispose();
     }
 }
