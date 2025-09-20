@@ -1,3 +1,5 @@
+// src/arvore/BSTree.java
+
 package arvore;
 
 import java.util.ArrayList;
@@ -111,22 +113,47 @@ public class BSTree {
 
     private void inOrderToList(Node node, java.util.List<String> result) {
         if (node != null) {
-            // Get left subtree (children with smaller values)
-            Node leftChild = getLeftChild(node);
-            if (leftChild != null) {
-                inOrderToList(leftChild, result);
+            // Primeiro processa todos os filhos menores (esquerda)
+            if(node.filhos != null) {
+                for (Node child : node.filhos) {
+                    if (child.palavra.compareTo(node.palavra) < 0) {
+                        inOrderToList(child, result);
+                    }
+                }
             }
 
-            // Process current node
+            // Processa o nó atual
             result.add(node.palavra + " -> " + node.frequencia);
 
-            // Get right subtree (children with larger values)
-            Node rightChild = getRightChild(node);
-            if (rightChild != null) {
-                inOrderToList(rightChild, result);
+            // Depois processa todos os filhos maiores (direita)
+            if(node.filhos != null) {
+                for (Node child : node.filhos) {
+                    if (child.palavra.compareTo(node.palavra) > 0) {
+                        inOrderToList(child, result);
+                    }
+                }
             }
         }
     }
+
+    // private void inOrderToList(Node node, java.util.List<String> result) {
+    //     if (node != null) {
+    //         // Get left subtree (children with smaller values)
+    //         Node leftChild = getLeftChild(node);
+    //         if (leftChild != null) {
+    //             inOrderToList(leftChild, result);
+    //         }
+
+    //         // Process current node
+    //         result.add(node.palavra + " -> " + node.frequencia);
+
+    //         // Get right subtree (children with larger values)
+    //         Node rightChild = getRightChild(node);
+    //         if (rightChild != null) {
+    //             inOrderToList(rightChild, result);
+    //         }
+    //     }
+    // }
 
     // Helper method to get left child (child with value < current node)
     private Node getLeftChild(Node node) {
