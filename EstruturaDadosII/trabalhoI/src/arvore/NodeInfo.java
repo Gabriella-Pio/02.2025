@@ -1,3 +1,5 @@
+// src/arvore/NodeInfo.java
+
 package arvore;
 
 // Classe auxiliar para passar informações de cada nó para a GUI

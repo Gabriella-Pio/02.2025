@@ -1,3 +1,5 @@
+// src/gui/ResultsPanel.java
+
 package gui;
 
 import arvore.NodeInfo;
@@ -54,14 +56,19 @@ public class ResultsPanel extends JPanel {
         treePanel = new TreePanel();
         treePanel.setBackground(textArea.getBackground());
 
+        // JScrollPane para a árvore - ESTA É A CHAVE!
+        JScrollPane treeScrollPane = new JScrollPane(treePanel);
+        treeScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        treeScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+
         // Painel com abas para alternar entre texto e árvore
         tabbedPane = new JTabbedPane();
         tabbedPane.addTab("📊 Resultados Textuais", textScrollPane);
-        tabbedPane.addTab("🌳 Visualização da Árvore", treePanel);
+        tabbedPane.addTab("🌳 Visualização da Árvore", treeScrollPane);
 
-        // ScrollPane principal
-        scrollPane = new JScrollPane(tabbedPane);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        // // ScrollPane principal
+        // scrollPane = new JScrollPane(tabbedPane);
+        // scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
     }
 
     /**
@@ -72,7 +79,7 @@ public class ResultsPanel extends JPanel {
         setBorder(new TitledBorder("📊 Resultados da Análise"));
 
         // Área com abas ocupa o centro
-        add(scrollPane, BorderLayout.CENTER);
+        add(tabbedPane, BorderLayout.CENTER);
 
         // Painel de botões na parte inferior
         JPanel buttonPanel = createButtonPanel();
@@ -188,7 +195,7 @@ public class ResultsPanel extends JPanel {
         addHeader("Frequência de Palavras");
         addResult(String.format("%-20s %s", "PALAVRA", "FREQUÊNCIA"));
         addResult("─".repeat(30));
-        
+
         for (String line : lines) {
             if (line.contains(" -> ")) {
                 String[] parts = line.split(" -> ");
@@ -205,17 +212,17 @@ public class ResultsPanel extends JPanel {
      */
     public void showTree(List<NodeInfo> nodes) {
         treePanel.setNodes(nodes);
-        
+
         // Ajustar tamanho baseado na profundidade
         if (nodes != null && !nodes.isEmpty()) {
             int maxLevel = nodes.stream().mapToInt(n -> n.nivel).max().orElse(0);
             int prefHeight = 20 + (maxLevel + 2) * 80;
             treePanel.setPreferredSize(new Dimension(600, prefHeight));
         }
-        
+
         treePanel.revalidate();
         treePanel.repaint();
-        
+
         // Mudar para a aba da árvore automaticamente
         tabbedPane.setSelectedIndex(1);
     }
@@ -225,21 +232,21 @@ public class ResultsPanel extends JPanel {
      */
     public void showAnalysis(TreeStats stats, String structureType) {
         addHeader("Análise de Performance - " + structureType);
-        
+
         addResult("• Comparações: " + stats.getComparacoes());
         addResult("• Atribuições: " + stats.getAtribuicoes());
-        
+
         if (stats.getRotacoes() > 0) {
             addResult("• Rotações AVL: " + stats.getRotacoes());
         }
-        
+
         addResult("• Tempo de execução: " + String.format("%.2f ms", stats.getTempoMilissegundos()));
         addResult("• Altura da estrutura: " + stats.getAltura());
-        
+
         // Análise de eficiência
         addSeparator();
         addResult("📈 Análise de Eficiência:");
-        
+
         if (structureType.equals("Vetor Dinâmico")) {
             addResult("• Tipo: Vetor Dinâmico (Busca Binária)");
             addResult("• Complexidade: O(n log n) para construção");
@@ -252,7 +259,7 @@ public class ResultsPanel extends JPanel {
             addResult("• Complexidade: O(n log n) garantido");
             addResult("• Balanceamento: ✅ Balanceada (" + stats.getRotacoes() + " rotações)");
         }
-        
+
         addSeparator();
     }
 
@@ -261,35 +268,36 @@ public class ResultsPanel extends JPanel {
      */
     public void compareStructures(TreeStats vectorStats, TreeStats bstStats, TreeStats avlStats) {
         addHeader("🔍 Comparação entre Estruturas");
-        
-        addResult(String.format("%-15s %-12s %-12s %-12s %-10s", 
-            "ESTRUTURA", "COMPARAÇÕES", "ATRIBUIÇÕES", "TEMPO (ms)", "ALTURA"));
+
+        addResult(String.format("%-15s %-12s %-12s %-12s %-10s",
+                "ESTRUTURA", "COMPARAÇÕES", "ATRIBUIÇÕES", "TEMPO (ms)", "ALTURA"));
         addResult("─".repeat(65));
-        
-        addResult(String.format("%-15s %-12d %-12d %-12.2f %-10d", 
-            "Vetor", vectorStats.getComparacoes(), vectorStats.getAtribuicoes(), 
-            vectorStats.getTempoMilissegundos(), vectorStats.getAltura()));
-        
-        addResult(String.format("%-15s %-12d %-12d %-12.2f %-10d", 
-            "BST", bstStats.getComparacoes(), bstStats.getAtribuicoes(), 
-            bstStats.getTempoMilissegundos(), bstStats.getAltura()));
-        
-        addResult(String.format("%-15s %-12d %-12d %-12.2f %-10d", 
-            "AVL", avlStats.getComparacoes(), avlStats.getAtribuicoes(), 
-            avlStats.getTempoMilissegundos(), avlStats.getAltura()));
-        
+
+        addResult(String.format("%-15s %-12d %-12d %-12.2f %-10d",
+                "Vetor", vectorStats.getComparacoes(), vectorStats.getAtribuicoes(),
+                vectorStats.getTempoMilissegundos(), vectorStats.getAltura()));
+
+        addResult(String.format("%-15s %-12d %-12d %-12.2f %-10d",
+                "BST", bstStats.getComparacoes(), bstStats.getAtribuicoes(),
+                bstStats.getTempoMilissegundos(), bstStats.getAltura()));
+
+        addResult(String.format("%-15s %-12d %-12d %-12.2f %-10d",
+                "AVL", avlStats.getComparacoes(), avlStats.getAtribuicoes(),
+                avlStats.getTempoMilissegundos(), avlStats.getAltura()));
+
         addSeparator();
-        
+
         // Análise comparativa
         addResult("💡 Insights:");
         if (avlStats.getAltura() < bstStats.getAltura()) {
-            addResult("• AVL é " + (bstStats.getAltura() - avlStats.getAltura()) + 
-                     " níveis mais balanceada que BST");
+            addResult("• AVL é " + (bstStats.getAltura() - avlStats.getAltura()) +
+                    " níveis mais balanceada que BST");
         }
-        
+
         if (avlStats.getTempoMilissegundos() < bstStats.getTempoMilissegundos()) {
-            addResult("• AVL foi " + String.format("%.2f", bstStats.getTempoMilissegundos() - avlStats.getTempoMilissegundos()) + 
-                     " ms mais rápida que BST");
+            addResult("• AVL foi "
+                    + String.format("%.2f", bstStats.getTempoMilissegundos() - avlStats.getTempoMilissegundos()) +
+                    " ms mais rápida que BST");
         }
     }
 

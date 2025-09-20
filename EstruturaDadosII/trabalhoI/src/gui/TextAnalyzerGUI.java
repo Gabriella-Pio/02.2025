@@ -1,3 +1,5 @@
+// src/gui/TextAnalyzerGUI.java
+
 package gui;
 
 import javax.swing.*;
@@ -13,6 +15,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.List;
 
 /**
  * CLASSE PRINCIPAL DA INTERFACE GRÁFICA
@@ -63,7 +66,7 @@ public class TextAnalyzerGUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Tamanho da janela (largura x altura)
-        setSize(900, 700);
+        setSize(1440, 900);
 
         // Centralizar na tela
         setLocationRelativeTo(null);
@@ -72,7 +75,7 @@ public class TextAnalyzerGUI extends JFrame {
         setResizable(true);
 
         // Definir tamanho mínimo
-        setMinimumSize(new Dimension(700, 500));
+        setMinimumSize(new Dimension(1200, 800));
     }
 
     /**
@@ -225,50 +228,75 @@ public class TextAnalyzerGUI extends JFrame {
         // simulateAnalysis();
 
         SwingWorker<Void, String> worker = new SwingWorker<>() {
-        @Override
-        protected Void doInBackground() {
-            try {
-                TextTokenizer tokenizer = new TextTokenizer("src/resources/stopwords.txt");
-                tokenizer.loadTextFile(selectedFile.getAbsolutePath());
-                String[] palavras = tokenizer.tokenizeToArray(tokenizer.TEXT);
+            @Override
+            protected Void doInBackground() {
+                try {
+                    TextTokenizer tokenizer = new TextTokenizer("src/resources/stopwords.txt");
+                    tokenizer.loadTextFile(selectedFile.getAbsolutePath());
+                    String[] palavras = tokenizer.tokenizeToArray(tokenizer.TEXT);
 
-                int escolha = configPanel.getSelectedStructureIndex();
+                    int escolha = configPanel.getSelectedStructureIndex();
 
-                if (escolha == 0) { // Vetor dinâmico
-                    publish("Executando Vetor Dinâmico...");
-                    DynamicWordFrequencyVector vetor = new DynamicWordFrequencyVector();
-                    TreeStats stats = vetor.buildWithStats(palavras);
-                    resultsPanel.addHeader("Resultados - Vetor Dinâmico");
-                    resultsPanel.showWordFrequencies(vetor.getFrequenciesAsList());
-                    resultsPanel.showAnalysis(stats, "Vetor Dinâmico");
+                    if (escolha == 0) { // Vetor dinâmico
+                        publish("Executando Vetor Dinâmico...");
+                        DynamicWordFrequencyVector vetor = new DynamicWordFrequencyVector();
+                        TreeStats stats = vetor.buildWithStats(palavras);
+                        resultsPanel.addHeader("Resultados - Vetor Dinâmico");
+                        resultsPanel.showWordFrequencies(vetor.getFrequenciesAsList());
+                        resultsPanel.showAnalysis(stats, "Vetor Dinâmico");
 
-                } else if (escolha == 1) { // BST
-                    publish("Executando Árvore BST...");
-                    BSTree bst = new BSTree();
-                    TreeStats stats = bst.buildWithStats(palavras);
-                    resultsPanel.addHeader("Resultados - BST");
-                    resultsPanel.showWordFrequencies(bst.getFrequenciesAsList());
-                    resultsPanel.showAnalysis(stats, "BST");
-                    resultsPanel.showTree(bst.getNodesWithLevel());
+                    } else if (escolha == 1) { // BST
+                        publish("Executando Árvore BST...");
+                        BSTree bst = new BSTree();
+                        TreeStats stats = bst.buildWithStats(palavras);
+                        resultsPanel.addHeader("Resultados - BST");
+                        resultsPanel.showWordFrequencies(bst.getFrequenciesAsList());
+                        resultsPanel.showAnalysis(stats, "BST");
+                        resultsPanel.showTree(bst.getNodesWithLevel());
 
-                } else if (escolha == 2) { // AVL
-                    publish("Executando Árvore AVL...");
-                    AVLTree avl = new AVLTree();
-                    TreeStats stats = avl.buildWithStats(palavras);
-                    resultsPanel.addHeader("Resultados - AVL");
-                    resultsPanel.showWordFrequencies(avl.getFrequenciesAsList());
-                    resultsPanel.showAnalysis(stats, "AVL");
-                    resultsPanel.showTree(avl.getNodesWithLevel());
+                    } else if (escolha == 2) { // AVL
+                        publish("Executando Árvore AVL...");
+                        AVLTree avl = new AVLTree();
+                        TreeStats stats = avl.buildWithStats(palavras);
+
+                        // CORRIGIR REFERÊNCIAS CIRCULARES ANTES DE USAR
+                        // avl.fixCircularReferences();
+
+                        // // Verificar referências circulares
+                        // avl.checkForCircularReferences();
+
+                        // DEBUG: Verificar dados
+
+                        int alturaCalculada = avl.getAltura();
+                        int alturaReportada = stats.getAltura();
+                        System.out.println("Altura calculada: " + alturaCalculada);
+                        System.out.println("Altura reportada: " + alturaReportada);
+
+                        if (alturaCalculada != alturaReportada) {
+                            System.out.println("❌ ERRO: Altura inconsistente!");
+                        }
+
+                        List<String> frequencies = avl.getFrequenciesAsList();
+                        List<NodeInfo> nodes = avl.getNodesWithLevel();
+
+                        System.out.println("AVL - Frequências: " + frequencies.size());
+                        System.out.println("AVL - Nós: " + nodes.size());
+                        // fim DEBUG
+
+                        resultsPanel.addHeader("Resultados - AVL");
+                        resultsPanel.showWordFrequencies(avl.getFrequenciesAsList());
+                        resultsPanel.showAnalysis(stats, "AVL");
+                        resultsPanel.showTree(avl.getNodesWithLevel());
+                    }
+
+                    publish("✅ Análise concluída!");
+
+                } catch (Exception e) {
+                    publish("❌ Erro durante análise: " + e.getMessage());
+                    e.printStackTrace();
                 }
-
-                publish("✅ Análise concluída!");
-
-            } catch (Exception e) {
-                publish("❌ Erro durante análise: " + e.getMessage());
-                e.printStackTrace();
+                return null;
             }
-            return null;
-        }
 
             @Override
             protected void process(java.util.List<String> chunks) {

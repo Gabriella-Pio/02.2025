@@ -1,3 +1,5 @@
+// src/vetor/DynamicWordFrequencyVector.java
+
 package vetor;
 
 import java.io.BufferedReader;

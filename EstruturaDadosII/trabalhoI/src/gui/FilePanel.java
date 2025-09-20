@@ -1,3 +1,5 @@
+// src/gui/FilePanel.java
+
 package gui;
 
 import javax.swing.*;
