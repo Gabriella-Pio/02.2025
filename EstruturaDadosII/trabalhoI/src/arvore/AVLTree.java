@@ -11,106 +11,193 @@ public class AVLTree {
     private int atribuicoes = 0; // contador de atribuições
     private int rotacoes = 0; // contador de atribuições
 
-    // Inserção pública que delega para o método recursivo
-    public void insertAVL(String palavra) {
-        raiz = insertAVLRec(raiz, palavra, null);
+    // Simplified Node structure for AVL - avoid circular references
+    private static class AVLNode {
+        String palavra;
+        int frequencia;
+        AVLNode esquerda, direita;
+        int altura;
+
+        AVLNode(String palavra) {
+            this.palavra = palavra;
+            this.frequencia = 1;
+            this.altura = 1;
+            this.esquerda = this.direita = null;
+        }
     }
 
-    private Node insertAVLRec(Node node, String palavra, Node parent) {
+    private AVLNode raizAVL;
+
+    // Inserção pública que delega para o método recursivo
+    public void insertAVL(String palavra) {
+        raizAVL = insertAVLRec(raizAVL, palavra);
+        // raiz = insertAVLRec(raiz, palavra, null);
+    }
+
+    private AVLNode insertAVLRec(AVLNode node, String palavra) {
+        // Step 1: Perform normal BST insertion
         if (node == null) {
             atribuicoes++;
-            Node newNode = new Node(palavra);
-            newNode.pai = parent;
-
-            if (parent != null) {
-                if (parent.filhos == null) {
-                    parent.filhos = new ArrayList<>();
-                }
-                parent.filhos.add(newNode);
-            }
-            return newNode;
+            return new AVLNode(palavra);
         }
 
         comparacoes++;
         int cmp = palavra.compareTo(node.palavra);
 
         if (cmp < 0) {
-            Node leftChild = findOrCreateChildPosition(node, palavra, true);
-            leftChild = insertAVLRec(leftChild, palavra, node);
-            updateChildrenList(node, leftChild);
+            node.esquerda = insertAVLRec(node.esquerda, palavra);
         } else if (cmp > 0) {
-            Node rightChild = findOrCreateChildPosition(node, palavra, false);
-            rightChild = insertAVLRec(rightChild, palavra, node);
-            updateChildrenList(node, rightChild);
+            node.direita = insertAVLRec(node.direita, palavra);
         } else {
+            // Word already exists, increment frequency
             atribuicoes++;
             node.frequencia++;
             return node;
         }
 
-        // Update height
-        node.altura = 1 + Math.max(getHeight(getLeftChild(node)), getHeight(getRightChild(node)));
+        // Step 2: Update height of current node
+        node.altura = 1 + Math.max(getHeight(node.esquerda), getHeight(node.direita));
 
-        // Check balance
+        // Step 3: Get balance factor
         int balance = getBalance(node);
 
-        // AVL Rotations - COUNT THESE!
-        if (balance > 1 && palavra.compareTo(getLeftChild(node).palavra) < 0) {
-            rotacoes++; // Count rotation
-            return rotateRight(node, parent);
+        // Step 4: Perform rotations if unbalanced
+        // Left Left Case
+        if (balance > 1 && palavra.compareTo(node.esquerda.palavra) < 0) {
+            rotacoes++;
+            return rotateRight(node);
         }
-        if (balance < -1 && palavra.compareTo(getRightChild(node).palavra) > 0) {
-            rotacoes++; // Count rotation
-            return rotateLeft(node, parent);
+
+        // Right Right Case
+        if (balance < -1 && palavra.compareTo(node.direita.palavra) > 0) {
+            rotacoes++;
+            return rotateLeft(node);
         }
-        if (balance > 1 && palavra.compareTo(getLeftChild(node).palavra) > 0) {
-            rotacoes += 2; // Count double rotation
-            Node leftChild = getLeftChild(node);
-            leftChild = rotateLeft(leftChild, node);
-            updateChildrenList(node, leftChild);
-            return rotateRight(node, parent);
+
+        // Left Right Case
+        if (balance > 1 && palavra.compareTo(node.esquerda.palavra) > 0) {
+            rotacoes += 2; // Double rotation
+            node.esquerda = rotateLeft(node.esquerda);
+            return rotateRight(node);
         }
-        if (balance < -1 && palavra.compareTo(getRightChild(node).palavra) < 0) {
-            rotacoes += 2; // Count double rotation
-            Node rightChild = getRightChild(node);
-            rightChild = rotateRight(rightChild, node);
-            updateChildrenList(node, rightChild);
-            return rotateLeft(node, parent);
+
+        // Right Left Case
+        if (balance < -1 && palavra.compareTo(node.direita.palavra) < 0) {
+            rotacoes += 2; // Double rotation
+            node.direita = rotateRight(node.direita);
+            return rotateLeft(node);
         }
 
         return node;
     }
 
+    // private Node insertAVLRec(Node node, String palavra, Node parent) {
+    // if (node == null) {
+    // atribuicoes++;
+    // Node newNode = new Node(palavra);
+    // newNode.pai = parent;
+
+    // if (parent != null) {
+    // if (parent.filhos == null) {
+    // parent.filhos = new ArrayList<>();
+    // }
+    // parent.filhos.add(newNode);
+    // }
+    // return newNode;
+    // }
+
+    // comparacoes++;
+    // int cmp = palavra.compareTo(node.palavra);
+
+    // if (cmp < 0) {
+    // Node leftChild = findOrCreateChildPosition(node, palavra, true);
+    // leftChild = insertAVLRec(leftChild, palavra, node);
+    // updateChildrenList(node, leftChild);
+    // } else if (cmp > 0) {
+    // Node rightChild = findOrCreateChildPosition(node, palavra, false);
+    // rightChild = insertAVLRec(rightChild, palavra, node);
+    // updateChildrenList(node, rightChild);
+    // } else {
+    // atribuicoes++;
+    // node.frequencia++;
+    // return node;
+    // }
+
+    // // Update height
+    // node.altura = 1 + Math.max(getHeight(getLeftChild(node)),
+    // getHeight(getRightChild(node)));
+
+    // // Check balance
+    // int balance = getBalance(node);
+
+    // // AVL Rotations - COUNT THESE!
+    // if (balance > 1 && palavra.compareTo(getLeftChild(node).palavra) < 0) {
+    // rotacoes++; // Count rotation
+    // return rotateRight(node, parent);
+    // }
+    // if (balance < -1 && palavra.compareTo(getRightChild(node).palavra) > 0) {
+    // rotacoes++; // Count rotation
+    // return rotateLeft(node, parent);
+    // }
+    // if (balance > 1 && palavra.compareTo(getLeftChild(node).palavra) > 0) {
+    // rotacoes += 2; // Count double rotation
+    // Node leftChild = getLeftChild(node);
+    // leftChild = rotateLeft(leftChild, node);
+    // updateChildrenList(node, leftChild);
+    // return rotateRight(node, parent);
+    // }
+    // if (balance < -1 && palavra.compareTo(getRightChild(node).palavra) < 0) {
+    // rotacoes += 2; // Count double rotation
+    // Node rightChild = getRightChild(node);
+    // rightChild = rotateRight(rightChild, node);
+    // updateChildrenList(node, rightChild);
+    // return rotateLeft(node, parent);
+    // }
+
+    // return node;
+    // }
+
     // findOrCreateChildPosition implementation
-    private Node findOrCreateChildPosition(Node parent, String palavra, boolean isLeft) {
-        if (parent.filhos == null) {
-            return null; // Will be created in recursion
-        }
 
-        // Look for existing child that should be in this position
-        for (Node child : parent.filhos) {
-            int cmp = palavra.compareTo(child.palavra);
-            boolean isCorrectPosition = (isLeft && cmp < 0 && child.palavra.compareTo(parent.palavra) < 0) ||
-                    (!isLeft && cmp > 0 && child.palavra.compareTo(parent.palavra) > 0);
+    // private Node findOrCreateChildPosition(Node parent, String palavra, boolean
+    // isLeft) {
+    // if (parent.filhos == null) {
+    // return null; // Will be created in recursion
+    // }
 
-            if (isCorrectPosition) {
-                return child;
-            }
-        }
+    // // Look for existing child that should be in this position
+    // for (Node child : parent.filhos) {
+    // int cmp = palavra.compareTo(child.palavra);
+    // boolean isCorrectPosition = (isLeft && cmp < 0 &&
+    // child.palavra.compareTo(parent.palavra) < 0) ||
+    // (!isLeft && cmp > 0 && child.palavra.compareTo(parent.palavra) > 0);
 
-        return null; // No suitable child found, will be created in recursion
-    }
+    // if (isCorrectPosition) {
+    // return child;
+    // }
+    // }
 
-    // Helper methods for AVL
-    private int getHeight(Node node) {
+    // return null; // No suitable child found, will be created in recursion
+    // }
+
+    private int getHeight(AVLNode node) {
         return node == null ? 0 : node.altura;
     }
 
-    private int getBalance(Node node) {
-        if (node == null)
-            return 0;
-        return getHeight(getLeftChild(node)) - getHeight(getRightChild(node));
+    private int getBalance(AVLNode node) {
+        return node == null ? 0 : getHeight(node.esquerda) - getHeight(node.direita);
     }
+
+    // // Helper methods for AVL
+    // private int getHeight(Node node) {
+    // return node == null ? 0 : node.altura;
+    // }
+
+    // private int getBalance(Node node) {
+    // if (node == null)
+    // return 0;
+    // return getHeight(getLeftChild(node)) - getHeight(getRightChild(node));
+    // }
 
     private Node getLeftChild(Node node) {
         if (node == null || node.filhos == null)
@@ -153,80 +240,90 @@ public class AVLTree {
     }
 
     // Rotation methods for AVL
-    private Node rotateRight(Node y, Node parent) {
-        Node x = getLeftChild(y);
-        if (x == null)
-            return y;
 
-        Node T2 = getRightChild(x);
+    private AVLNode rotateRight(AVLNode y) {
+        AVLNode x = y.esquerda;
+        AVLNode T2 = x.direita;
 
         // Perform rotation
-        updateChildrenRelations(x, y, false); // x becomes parent of y
-        if (T2 != null)
-            updateChildrenRelations(y, T2, true); // y gets T2 as left child
+        x.direita = y;
+        y.esquerda = T2;
 
         // Update heights
-        y.altura = Math.max(getHeight(getLeftChild(y)), getHeight(getRightChild(y))) + 1;
-        x.altura = Math.max(getHeight(getLeftChild(x)), getHeight(getRightChild(x))) + 1;
-
-        // Update parent relationship
-        x.pai = parent;
-        if (parent != null) {
-            updateChildrenList(parent, x);
-        }
+        y.altura = Math.max(getHeight(y.esquerda), getHeight(y.direita)) + 1;
+        x.altura = Math.max(getHeight(x.esquerda), getHeight(x.direita)) + 1;
 
         return x;
     }
 
-    private Node rotateLeft(Node x, Node parent) {
-        Node y = getRightChild(x);
-        if (y == null)
-            return x;
+    // private Node rotateRight(Node y, Node parent) {
+    // Node x = getLeftChild(y);
+    // if (x == null)
+    // return y;
 
-        Node T2 = getLeftChild(y);
+    // Node T2 = getRightChild(x);
+
+    // // Perform rotation
+    // updateChildrenRelations(x, y, false); // x becomes parent of y
+    // if (T2 != null)
+    // updateChildrenRelations(y, T2, true); // y gets T2 as left child
+
+    // // Update heights
+    // y.altura = Math.max(getHeight(getLeftChild(y)), getHeight(getRightChild(y)))
+    // + 1;
+    // x.altura = Math.max(getHeight(getLeftChild(x)), getHeight(getRightChild(x)))
+    // + 1;
+
+    // // Update parent relationship
+    // x.pai = parent;
+    // if (parent != null) {
+    // updateChildrenList(parent, x);
+    // }
+
+    // return x;
+    // }
+
+    private AVLNode rotateLeft(AVLNode x) {
+        AVLNode y = x.direita;
+        AVLNode T2 = y.esquerda;
 
         // Perform rotation
-        updateChildrenRelations(y, x, true); // y becomes parent of x
-        if (T2 != null)
-            updateChildrenRelations(x, T2, false); // x gets T2 as right child
+        y.esquerda = x;
+        x.direita = T2;
 
         // Update heights
-        x.altura = Math.max(getHeight(getLeftChild(x)), getHeight(getRightChild(x))) + 1;
-        y.altura = Math.max(getHeight(getLeftChild(y)), getHeight(getRightChild(y))) + 1;
-
-        // Update parent relationship
-        y.pai = parent;
-        if (parent != null) {
-            updateChildrenList(parent, y);
-        }
+        x.altura = Math.max(getHeight(x.esquerda), getHeight(x.direita)) + 1;
+        y.altura = Math.max(getHeight(y.esquerda), getHeight(y.direita)) + 1;
 
         return y;
     }
 
-    public java.util.List<String> getFrequenciesAsList() {
-        java.util.List<String> result = new java.util.ArrayList<>();
-        inOrderToList(raiz, result);
-        return result;
-    }
+    // private Node rotateLeft(Node x, Node parent) {
+    // Node y = getRightChild(x);
+    // if (y == null)
+    // return x;
 
-    private void inOrderToList(Node node, java.util.List<String> result) {
-        if (node != null) {
-            // Process left subtree (children with smaller values)
-            Node leftChild = getLeftChild(node);
-            if (leftChild != null) {
-                inOrderToList(leftChild, result);
-            }
+    // Node T2 = getLeftChild(y);
 
-            // Process current node
-            result.add(node.palavra + " -> " + node.frequencia);
+    // // Perform rotation
+    // updateChildrenRelations(y, x, true); // y becomes parent of x
+    // if (T2 != null)
+    // updateChildrenRelations(x, T2, false); // x gets T2 as right child
 
-            // Process right subtree (children with larger values)
-            Node rightChild = getRightChild(node);
-            if (rightChild != null) {
-                inOrderToList(rightChild, result);
-            }
-        }
-    }
+    // // Update heights
+    // x.altura = Math.max(getHeight(getLeftChild(x)), getHeight(getRightChild(x)))
+    // + 1;
+    // y.altura = Math.max(getHeight(getLeftChild(y)), getHeight(getRightChild(y)))
+    // + 1;
+
+    // // Update parent relationship
+    // y.pai = parent;
+    // if (parent != null) {
+    // updateChildrenList(parent, y);
+    // }
+
+    // return y;
+    // }
 
     private void updateChildrenRelations(Node newParent, Node newChild, boolean asLeftChild) {
         // Remove newChild from its current parent's children list
@@ -249,13 +346,59 @@ public class AVLTree {
         long startTime = System.nanoTime();
 
         for (String palavra : palavras) {
-            raiz = insertAVLRec(raiz, palavra, null);
+            insertAVL(palavra);
         }
 
         long endTime = System.nanoTime();
-        double tempo = (endTime - startTime) / 1_000_000.0; // ms
+        double tempo = (endTime - startTime) / 1_000_000.0;
+
+        // Convert AVL structure to Node structure for GUI compatibility
+        convertToNodeStructure();
 
         return new TreeStats(comparacoes, atribuicoes, rotacoes, tempo, getAltura());
+    }
+
+    // public TreeStats buildWithStats(String[] palavras) {
+    // resetAnalise();
+    // long startTime = System.nanoTime();
+
+    // for (String palavra : palavras) {
+    // raiz = insertAVLRec(raiz, palavra, null);
+    // }
+
+    // long endTime = System.nanoTime();
+    // double tempo = (endTime - startTime) / 1_000_000.0; // ms
+
+    // return new TreeStats(comparacoes, atribuicoes, rotacoes, tempo, getAltura());
+    // }
+
+    // Convert internal AVL structure to Node structure for GUI
+    private void convertToNodeStructure() {
+        raiz = convertToNode(raizAVL, null);
+    }
+
+    private Node convertToNode(AVLNode avlNode, Node parent) {
+        if (avlNode == null)
+            return null;
+
+        Node node = new Node(avlNode.palavra);
+        node.frequencia = avlNode.frequencia;
+        node.altura = avlNode.altura;
+        node.pai = parent;
+        node.filhos = new ArrayList<>();
+
+        // Convert children
+        Node leftChild = convertToNode(avlNode.esquerda, node);
+        Node rightChild = convertToNode(avlNode.direita, node);
+
+        if (leftChild != null) {
+            node.filhos.add(leftChild);
+        }
+        if (rightChild != null) {
+            node.filhos.add(rightChild);
+        }
+
+        return node;
     }
 
     public int getComparacoes() {
@@ -270,39 +413,109 @@ public class AVLTree {
         return rotacoes;
     }
 
+    public int getAltura() {
+        return getHeight(raizAVL);
+    }
+
     public void resetAnalise() {
         comparacoes = 0;
         atribuicoes = 0;
         rotacoes = 0;
     }
 
-    public int getAltura() {
-        return getAltura(raiz);
+    // public int getAltura() {
+    // return getAltura(raiz);
+    // }
+
+    // private int getAltura(Node node) {
+    // if (node == null)
+    // return 0;
+    // return node.altura;
+    // }
+
+    // GUI compatibility methods
+    public List<String> getFrequenciesAsList() {
+        List<String> result = new ArrayList<>();
+        inOrderToList(raizAVL, result);
+        return result;
     }
 
-    private int getAltura(Node node) {
-        if (node == null)
-            return 0;
-        return node.altura;
+    // public java.util.List<String> getFrequenciesAsList() {
+    // java.util.List<String> result = new java.util.ArrayList<>();
+    // inOrderToList(raiz, result);
+    // return result;
+    // }
+
+    private void inOrderToList(AVLNode node, List<String> result) {
+        if (node != null) {
+            inOrderToList(node.esquerda, result);
+            result.add(node.palavra + " -> " + node.frequencia);
+            inOrderToList(node.direita, result);
+        }
     }
+
+    // private void inOrderToList(Node node, java.util.List<String> result) {
+    // if (node != null) {
+    // // Process left subtree (children with smaller values)
+    // Node leftChild = getLeftChild(node);
+    // if (leftChild != null) {
+    // inOrderToList(leftChild, result);
+    // }
+
+    // // Process current node
+    // result.add(node.palavra + " -> " + node.frequencia);
+
+    // // Process right subtree (children with larger values)
+    // Node rightChild = getRightChild(node);
+    // if (rightChild != null) {
+    // inOrderToList(rightChild, result);
+    // }
+    // }
+    // }
 
     public List<NodeInfo> getNodesWithLevel() {
         List<NodeInfo> lista = new ArrayList<>();
-        preencherListaComPai(raiz, null, 0, lista);
+        if (raiz != null) {
+            preencherListaComNivel(raiz, 0, lista);
+        }
         return lista;
     }
 
-    private void preencherListaComPai(Node node, Node parent, int nivel, List<NodeInfo> lista) {
+    // public List<NodeInfo> getNodesWithLevel() {
+    // List<NodeInfo> lista = new ArrayList<>();
+    // preencherListaComPai(raiz, null, 0, lista);
+    // return lista;
+    // }
+
+    private void preencherListaComNivel(Node node, int nivel, List<NodeInfo> lista) {
         if (node != null) {
             NodeInfo nodeInfo = new NodeInfo(node, nivel);
-            nodeInfo.pai = parent; // Set parent reference
             lista.add(nodeInfo);
 
             if (node.filhos != null) {
                 for (Node child : node.filhos) {
-                    preencherListaComPai(child, node, nivel + 1, lista);
+                    preencherListaComNivel(child, nivel + 1, lista);
                 }
             }
         }
     }
+
+    public Node getRaiz() {
+        return raiz;
+    }
+
+    // private void preencherListaComPai(Node node, Node parent, int nivel,
+    // List<NodeInfo> lista) {
+    // if (node != null) {
+    // NodeInfo nodeInfo = new NodeInfo(node, nivel);
+    // nodeInfo.pai = parent; // Set parent reference
+    // lista.add(nodeInfo);
+
+    // if (node.filhos != null) {
+    // for (Node child : node.filhos) {
+    // preencherListaComPai(child, node, nivel + 1, lista);
+    // }
+    // }
+    // }
+    // }
 }
