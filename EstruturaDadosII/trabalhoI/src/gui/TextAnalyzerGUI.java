@@ -15,6 +15,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -26,15 +27,22 @@ import java.util.List;
  */
 public class TextAnalyzerGUI extends JFrame {
 
-    // ====== COMPONENTES DA INTERFACE ======
-    // Estes são os "painéis" que compõem nossa janela
-    private FilePanel filePanel; // Painel para seleção de arquivo
-    private ConfigPanel configPanel; // Painel de configurações
-    private ResultsPanel resultsPanel; // Painel para mostrar resultados
-    private JProgressBar progressBar; // Barra de progresso
+    // ====== COMPONENTES ======
+    private FilePanel filePanel;
+    private ConfigPanel configPanel;
+    private ResultsPanel resultsPanel;
+    private JProgressBar progressBar;
 
-    // ====== DADOS DA APLICAÇÃO ======
-    private File selectedFile; // Arquivo selecionado pelo usuário
+    // ====== DADOS ======
+    private File selectedFile;
+
+    // ====== CONTROLE PASSO-A-PASSO ======
+    private Timer stepTimer;
+    private int currentStep = 0;
+    private String[] palavrasStep;
+    private int totalSteps = 0;
+    private int delayMs = 500;
+    private int estruturaSelecionada = -1;
 
     /**
      * CONSTRUTOR - É executado quando criamos a janela
@@ -112,15 +120,12 @@ public class TextAnalyzerGUI extends JFrame {
     private void layoutComponents() {
         // Usar BorderLayout para organizar
         setLayout(new BorderLayout(10, 10)); // 10px de espaço entre componentes
+        JPanel topPanel = new JPanel(new BorderLayout(5, 5));
+        topPanel.add(filePanel, BorderLayout.NORTH);
+        topPanel.add(configPanel, BorderLayout.CENTER);
 
-        // Painel superior - combina seleção de arquivo + configurações
-        JPanel topPanel = createTopPanel();
         add(topPanel, BorderLayout.NORTH);
-
-        // Centro - resultados (pega a maior parte do espaço)
         add(resultsPanel, BorderLayout.CENTER);
-
-        // Parte inferior - barra de progresso
         add(progressBar, BorderLayout.SOUTH);
 
         // Adicionar uma "moldura" interna de 15px
@@ -133,18 +138,18 @@ public class TextAnalyzerGUI extends JFrame {
      * Combina o painel de arquivo + painel de configurações
      * em um só painel vertical
      */
-    private JPanel createTopPanel() {
-        JPanel topPanel = new JPanel();
-        topPanel.setLayout(new BorderLayout(5, 5));
+    // private JPanel createTopPanel() {
+    // JPanel topPanel = new JPanel();
+    // topPanel.setLayout(new BorderLayout(5, 5));
 
-        // Arquivo vai no topo
-        topPanel.add(filePanel, BorderLayout.NORTH);
+    // // Arquivo vai no topo
+    // topPanel.add(filePanel, BorderLayout.NORTH);
 
-        // Configurações vão embaixo
-        topPanel.add(configPanel, BorderLayout.CENTER);
+    // // Configurações vão embaixo
+    // topPanel.add(configPanel, BorderLayout.CENTER);
 
-        return topPanel;
-    }
+    // return topPanel;
+    // }
 
     /**
      * CONFIGURAÇÃO DOS EVENTOS
@@ -160,23 +165,8 @@ public class TextAnalyzerGUI extends JFrame {
                 try {
                     TextTokenizer tokenizer = new TextTokenizer("src/resources/stopwords.txt");
                     tokenizer.loadTextFile(file.getAbsolutePath());
-
-                    // String[] palavras = tokenizer.tokenizeToArray(tokenizer.TEXT);
-
-                    // // Aqui você pode chamar os algoritmos
-                    // DynamicWordFrequencyVector vetor = new DynamicWordFrequencyVector();
-                    // TreeStats statsVetor = vetor.buildWithStats(palavras);
-
-                    // E atualizar a ResultsPanel, por exemplo
-                    // resultsPanel.showResults(vetor, statsVetor);
-
-                    // Quando um arquivo é selecionado...
                     selectedFile = file;
-
-                    // Habilitar o botão de análise
                     configPanel.setAnalyzeButtonEnabled(true);
-
-                    // Mostrar mensagem de sucesso
                     showMessage("✅ Arquivo selecionado: " + file.getName());
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(null,
@@ -193,13 +183,23 @@ public class TextAnalyzerGUI extends JFrame {
         });
 
         // ====== EVENTO: Botão de análise clicado ======
-        configPanel.setAnalyzeButtonListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Quando o botão "Analisar" é clicado...
-                startAnalysis();
-            }
+        configPanel.setAnalyzeButtonListener(e -> startAnalysis());
+
+        // Play / Pause / Next / Stop
+        configPanel.setPlayListener(e -> {
+            if (stepTimer != null)
+                stepTimer.start();
         });
+        configPanel.setPauseListener(e -> {
+            if (stepTimer != null)
+                stepTimer.stop();
+        });
+        configPanel.setNextListener(e -> {
+            if (stepTimer != null)
+                stepTimer.stop();
+            runOneStep();
+        });
+        configPanel.setStopListener(e -> stopStepByStep());
     }
 
     /**
@@ -216,18 +216,14 @@ public class TextAnalyzerGUI extends JFrame {
         progressBar.setVisible(true);
         progressBar.setIndeterminate(true); // Animação contínua
         progressBar.setString("🔍 Analisando arquivo...");
-
-        // Desabilitar botão durante análise
         configPanel.setAnalyzeButtonEnabled(false);
-
-        // Limpar resultados anteriores
         resultsPanel.clearResults();
 
-        // Aqui você conectaria com seu backend
-        // Por enquanto, vamos simular uma análise
+        // Aqui conectamos com o backend
+        // Por enquanto, simulamos uma análise
         // simulateAnalysis();
 
-        SwingWorker<Void, String> worker = new SwingWorker<>() {
+        new SwingWorker<Void, String>() {
             @Override
             protected Void doInBackground() {
                 try {
@@ -235,74 +231,25 @@ public class TextAnalyzerGUI extends JFrame {
                     tokenizer.loadTextFile(selectedFile.getAbsolutePath());
                     String[] palavras = tokenizer.tokenizeToArray(tokenizer.TEXT);
 
-                    int escolha = configPanel.getSelectedStructureIndex();
+                    estruturaSelecionada = configPanel.getSelectedStructureIndex();
+                    boolean passoAPasso = configPanel.isStepByStepEnabled();
+                    delayMs = 400; // fixo em 400 ms
 
-                    if (escolha == 0) { // Vetor dinâmico
-                        publish("Executando Vetor Dinâmico...");
-                        DynamicWordFrequencyVector vetor = new DynamicWordFrequencyVector();
-                        TreeStats stats = vetor.buildWithStats(palavras);
-                        resultsPanel.addHeader("Resultados - Vetor Dinâmico");
-                        resultsPanel.showWordFrequencies(vetor.getFrequenciesAsList());
-                        resultsPanel.showAnalysis(stats, "Vetor Dinâmico");
-
-                    } else if (escolha == 1) { // BST
-                        publish("Executando Árvore BST...");
-                        BSTree bst = new BSTree();
-                        TreeStats stats = bst.buildWithStats(palavras);
-                        resultsPanel.addHeader("Resultados - BST");
-                        resultsPanel.showWordFrequencies(bst.getFrequenciesAsList());
-                        resultsPanel.showAnalysis(stats, "BST");
-                        resultsPanel.showTree(bst.getNodesWithLevel());
-
-                    } else if (escolha == 2) { // AVL
-                        publish("Executando Árvore AVL...");
-                        AVLTree avl = new AVLTree();
-                        TreeStats stats = avl.buildWithStats(palavras);
-
-                        // CORRIGIR REFERÊNCIAS CIRCULARES ANTES DE USAR
-                        // avl.fixCircularReferences();
-
-                        // // Verificar referências circulares
-                        // avl.checkForCircularReferences();
-
-                        // DEBUG: Verificar dados
-
-                        int alturaCalculada = avl.getAltura();
-                        int alturaReportada = stats.getAltura();
-                        System.out.println("Altura calculada: " + alturaCalculada);
-                        System.out.println("Altura reportada: " + alturaReportada);
-
-                        if (alturaCalculada != alturaReportada) {
-                            System.out.println("❌ ERRO: Altura inconsistente!");
-                        }
-
-                        List<String> frequencies = avl.getFrequenciesAsList();
-                        List<NodeInfo> nodes = avl.getNodesWithLevel();
-
-                        System.out.println("AVL - Frequências: " + frequencies.size());
-                        System.out.println("AVL - Nós: " + nodes.size());
-                        // fim DEBUG
-
-                        resultsPanel.addHeader("Resultados - AVL");
-                        resultsPanel.showWordFrequencies(avl.getFrequenciesAsList());
-                        resultsPanel.showAnalysis(stats, "AVL");
-                        resultsPanel.showTree(avl.getNodesWithLevel());
+                    if (!passoAPasso || estruturaSelecionada == 0) {
+                        executarNormal(palavras, estruturaSelecionada);
+                    } else {
+                        executarPassoAPasso(palavras);
                     }
-
-                    publish("✅ Análise concluída!");
-
                 } catch (Exception e) {
-                    publish("❌ Erro durante análise: " + e.getMessage());
-                    e.printStackTrace();
+                    publish("❌ Erro: " + e.getMessage());
                 }
                 return null;
             }
 
             @Override
             protected void process(java.util.List<String> chunks) {
-                for (String message : chunks) {
-                    resultsPanel.addResult(message);
-                }
+                for (String msg : chunks)
+                    resultsPanel.addResult(msg);
             }
 
             @Override
@@ -310,91 +257,136 @@ public class TextAnalyzerGUI extends JFrame {
                 progressBar.setVisible(false);
                 configPanel.setAnalyzeButtonEnabled(true);
             }
-        };
-
-        worker.execute();
+        }.execute();
     }
 
-    /**
-     * SIMULAÇÃO DE ANÁLISE
-     * Simula o processamento para demonstrar a interface
-     */
-    private void simulateAnalysis() {
-        // Criar uma tarefa em background para não travar a interface
-        SwingWorker<Void, String> worker = new SwingWorker<Void, String>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                // Simular processamento...
-                publish("🚀 Iniciando análise do arquivo: " + selectedFile.getName());
-                Thread.sleep(1000); // Simular 1 segundo de processamento
-
-                publish("📊 Executando Busca Binária...");
-                Thread.sleep(800);
-
-                publish("🌳 Executando BST...");
-                Thread.sleep(900);
-
-                publish("⚖️ Executando AVL...");
-                Thread.sleep(700);
-
-                publish("✅ Análise concluída!");
-
-                return null;
-            }
-
-            @Override
-            protected void process(java.util.List<String> chunks) {
-                // Atualizar a interface com mensagens
-                for (String message : chunks) {
-                    resultsPanel.addResult(message);
-                }
-            }
-
-            @Override
-            protected void done() {
-                // Quando terminar...
-                progressBar.setVisible(false);
-                configPanel.setAnalyzeButtonEnabled(true);
-                showMessage("🎉 Análise concluída com sucesso!");
-            }
-        };
-
-        worker.execute();
+    private void executarNormal(String[] palavras, int escolha) {
+        if (escolha == 0) {
+            DynamicWordFrequencyVector vetor = new DynamicWordFrequencyVector();
+            TreeStats stats = vetor.buildWithStats(palavras);
+            SwingUtilities.invokeLater(() -> {
+                resultsPanel.addHeader("Resultados - Vetor Dinâmico");
+                resultsPanel.showWordFrequencies(vetor.getFrequenciesAsList());
+                resultsPanel.showAnalysis(stats, "Vetor Dinâmico");
+            });
+        } else if (escolha == 1) {
+            BSTree bst = new BSTree();
+            TreeStats stats = bst.buildWithStats(palavras);
+            SwingUtilities.invokeLater(() -> {
+                resultsPanel.addHeader("Resultados - BST");
+                resultsPanel.showWordFrequencies(bst.getFrequenciesAsList());
+                resultsPanel.showAnalysis(stats, "BST");
+                resultsPanel.showTree(bst.getNodesWithLevel());
+            });
+        } else if (escolha == 2) {
+            AVLTree avl = new AVLTree();
+            TreeStats stats = avl.buildWithStats(palavras);
+            SwingUtilities.invokeLater(() -> {
+                resultsPanel.addHeader("Resultados - AVL");
+                resultsPanel.showWordFrequencies(avl.getFrequenciesAsList());
+                resultsPanel.showAnalysis(stats, "AVL");
+                resultsPanel.showTree(avl.getNodesWithLevel());
+            });
+        }
     }
 
-    /**
-     * MÉTODOS AUXILIARES PARA MOSTRAR MENSAGENS
-     */
+    private void executarPassoAPasso(String[] palavras) {
+        palavrasStep = palavras;
+        totalSteps = palavras.length;
+        currentStep = 0;
+
+        SwingUtilities.invokeLater(() -> {
+            progressBar.setIndeterminate(false);
+            progressBar.setMinimum(0);
+            progressBar.setMaximum(totalSteps);
+            progressBar.setValue(0);
+            configPanel.enableControlButtons(true);
+        });
+
+        stepTimer = new Timer(delayMs, e -> runOneStep());
+        stepTimer.start();
+    }
+
+    private void runOneStep() {
+        if (currentStep >= totalSteps) {
+            if (stepTimer != null)
+                stepTimer.stop();
+            mostrarResultadosFinais();
+            return;
+        }
+
+        currentStep++;
+        String[] prefix = Arrays.copyOfRange(palavrasStep, 0, currentStep);
+
+        if (estruturaSelecionada == 1) {
+            BSTree bst = new BSTree();
+            TreeStats stats = bst.buildWithStats(prefix);
+            List<NodeInfo> nodes = bst.getNodesWithLevel();
+            String palavra = prefix[currentStep - 1];
+            SwingUtilities.invokeLater(() -> {
+                resultsPanel.showTree(nodes);
+                resultsPanel.addResult("Inserido (" + currentStep + "/" + totalSteps + "): " + palavra);
+                progressBar.setValue(currentStep);
+                progressBar.setString("Inserindo: " + currentStep + " / " + totalSteps);
+            });
+        } else if (estruturaSelecionada == 2) {
+            AVLTree avl = new AVLTree();
+            TreeStats stats = avl.buildWithStats(prefix);
+            List<NodeInfo> nodes = avl.getNodesWithLevel();
+            String palavra = prefix[currentStep - 1];
+            SwingUtilities.invokeLater(() -> {
+                resultsPanel.showTree(nodes);
+                resultsPanel.addResult("Inserido (" + currentStep + "/" + totalSteps + "): " + palavra);
+                progressBar.setValue(currentStep);
+                progressBar.setString("Inserindo: " + currentStep + " / " + totalSteps);
+            });
+        }
+    }
+
+    private void mostrarResultadosFinais() {
+        if (estruturaSelecionada == 1) {
+            BSTree bst = new BSTree();
+            TreeStats stats = bst.buildWithStats(palavrasStep);
+            SwingUtilities.invokeLater(() -> {
+                resultsPanel.addHeader("Resultados - BST (final)");
+                resultsPanel.showWordFrequencies(bst.getFrequenciesAsList());
+                resultsPanel.showAnalysis(stats, "BST");
+            });
+        } else if (estruturaSelecionada == 2) {
+            AVLTree avl = new AVLTree();
+            TreeStats stats = avl.buildWithStats(palavrasStep);
+            SwingUtilities.invokeLater(() -> {
+                resultsPanel.addHeader("Resultados - AVL (final)");
+                resultsPanel.showWordFrequencies(avl.getFrequenciesAsList());
+                resultsPanel.showAnalysis(stats, "AVL");
+            });
+        }
+    }
+
+    private void stopStepByStep() {
+        if (stepTimer != null)
+            stepTimer.stop();
+        currentStep = totalSteps;
+        resultsPanel.addResult("⏹ Execução interrompida.");
+        configPanel.enableControlButtons(false);
+    }
+
     private void showMessage(String message) {
-        JOptionPane.showMessageDialog(this, message, "Informação",
-                JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, "Erro",
-                JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, "Erro", JOptionPane.ERROR_MESSAGE);
     }
 
-    /**
-     * MÉTODO MAIN - PONTO DE ENTRADA DO PROGRAMA
-     * É aqui que tudo começa!
-     */
     public static void main(String[] args) {
-        // SwingUtilities.invokeLater garante que a interface
-        // seja criada na thread correta (EDT - Event Dispatch Thread)
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // Usar a aparência do sistema operacional
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                // Criar e mostrar a janela
-                new TextAnalyzerGUI().setVisible(true);
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+            new TextAnalyzerGUI().setVisible(true);
         });
     }
 }

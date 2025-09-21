@@ -1,10 +1,12 @@
 // src/gui/ConfigPanel.java
 
 package gui;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
 
 /**
  * PAINEL DE CONFIGURAÇÕES
@@ -18,9 +20,23 @@ import java.awt.event.ActionListener;
 public class ConfigPanel extends JPanel {
 
     // ====== COMPONENTES VISUAIS ======
-    private JComboBox<String> structureComboBox;  // Lista suspensa para escolher estrutura
-    private JButton analyzeButton;                // Botão para iniciar análise
-    private JLabel instructionLabel;              // Label com instruções
+    private JComboBox<String> structureComboBox; // Lista suspensa para escolher estrutura
+    private JButton analyzeButton; // Botão para iniciar análise
+    private JLabel instructionLabel; // Label com instruções
+
+    // Passo-a-passo
+    private JCheckBox stepByStepCheckBox;
+    private JLabel speedLabel;
+    private JSlider speedSlider;
+
+    // Controles extras
+    private JButton playButton;
+    private JButton pauseButton;
+    private JButton nextButton;
+    private JButton stopButton;
+
+    private JPanel stepPanel;
+    private JPanel controlPanel;
 
     /**
      * CONSTRUTOR
@@ -30,6 +46,7 @@ public class ConfigPanel extends JPanel {
         createComponents();
         layoutComponents();
         customizeComponents();
+        setupInteractions();
     }
 
     /**
@@ -53,6 +70,30 @@ public class ConfigPanel extends JPanel {
         // Botão para iniciar análise
         analyzeButton = new JButton("🚀 Analisar Texto");
         analyzeButton.setEnabled(false); // Inicialmente desabilitado (sem arquivo selecionado)
+
+        // Componentes para modo passo a passo (inicialmente não visíveis)
+        stepByStepCheckBox = new JCheckBox("Montar passo a passo");
+        // speedLabel = new JLabel("Velocidade (ms):");
+
+        // speedSlider = new JSlider(50, 2000, 500); // 50–2000 ms
+        // speedSlider.setPaintTicks(true);
+        // speedSlider.setPaintLabels(true);
+        // speedSlider.setMajorTickSpacing(500);
+        // speedSlider.setMinorTickSpacing(50);
+        // speedSlider.setEnabled(false);
+
+        playButton = new JButton("▶ Play");
+        pauseButton = new JButton("⏸ Pause");
+        nextButton = new JButton("⏭ Next");
+        stopButton = new JButton("⏹ Stop");
+
+        playButton.setEnabled(false);
+        pauseButton.setEnabled(false);
+        nextButton.setEnabled(false);
+        stopButton.setEnabled(false);
+
+        stepPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
     }
 
     /**
@@ -61,7 +102,7 @@ public class ConfigPanel extends JPanel {
      */
     private void layoutComponents() {
         // Usar FlowLayout para organizar em linha
-        setLayout(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
 
         // Adicionar borda com título
         setBorder(new TitledBorder("⚙️ Configurações de Análise"));
@@ -69,84 +110,101 @@ public class ConfigPanel extends JPanel {
         // Adicionar componentes na ordem
         add(instructionLabel);
         add(structureComboBox);
+
+        stepPanel.add(stepByStepCheckBox);
+        // stepPanel.add(speedLabel);
+        // stepPanel.add(speedSlider);
+        add(stepPanel);
+
+        controlPanel.add(playButton);
+        controlPanel.add(pauseButton);
+        controlPanel.add(nextButton);
+        controlPanel.add(stopButton);
+        add(controlPanel);
+
         add(analyzeButton);
+
+        stepPanel.setVisible(false);
+        controlPanel.setVisible(false);
     }
 
     /**
      * PERSONALIZAR COMPONENTES
      * Ajustar cores, fontes, tamanhos, etc.
      */
-    private void customizeComponents() {
-        // Personalizar ComboBox
-        structureComboBox.setPreferredSize(new Dimension(280, 30));
-        structureComboBox.setBackground(Color.WHITE);
-        structureComboBox.setForeground(Color.BLACK);
 
-        // Personalizar botão de análise
-        analyzeButton.setPreferredSize(new Dimension(150, 35));
-        analyzeButton.setBackground(new Color(40, 167, 69)); // Verde
+    private void customizeComponents() {
+        structureComboBox.setPreferredSize(new Dimension(300, 30));
+        structureComboBox.setBackground(Color.WHITE);
+
+        analyzeButton.setPreferredSize(new Dimension(160, 36));
+        analyzeButton.setBackground(new Color(40, 167, 69));
         analyzeButton.setForeground(Color.WHITE);
         analyzeButton.setFocusPainted(false);
         analyzeButton.setBorderPainted(false);
         analyzeButton.setOpaque(true);
         analyzeButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
 
-        // Adicionar efeitos de hover (passar mouse sobre o botão)
-        addHoverEffects();
+        // speedSlider.setPreferredSize(new Dimension(250, 50));
     }
 
-    /**
-     * ADICIONAR EFEITOS DE HOVER
-     * Fazer o botão mudar de cor quando o mouse passar sobre ele
-     */
-    private void addHoverEffects() {
-        Color originalColor = analyzeButton.getBackground();
-        Color hoverColor = new Color(34, 139, 59); // Verde mais escuro
-
-        analyzeButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                // Mouse entrou no botão
-                if (analyzeButton.isEnabled()) {
-                    analyzeButton.setBackground(hoverColor);
-                }
+    private void setupInteractions() {
+        // Exibir ou ocultar painel de passo-a-passo dependendo da estrutura
+        structureComboBox.addItemListener(e -> {
+            if (getSelectedStructureIndex() == 0) { // Vetor
+                stepPanel.setVisible(false);
+                controlPanel.setVisible(false);
+                stepByStepCheckBox.setSelected(false);
+            } else {
+                stepPanel.setVisible(true);
+                controlPanel.setVisible(stepByStepCheckBox.isSelected());
             }
+            revalidate();
+            repaint();
+        });
 
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                // Mouse saiu do botão
-                if (analyzeButton.isEnabled()) {
-                    analyzeButton.setBackground(originalColor);
-                }
-            }
+        stepByStepCheckBox.addItemListener(e -> {
+            boolean on = e.getStateChange() == ItemEvent.SELECTED;
+            // speedSlider.setEnabled(on);
+            controlPanel.setVisible(on);
         });
     }
 
-    /**
-     * DEFINIR "OUVINTE" PARA O BOTÃO DE ANÁLISE
-     * Permite que outras classes sejam avisadas quando o botão for clicado
-     */
-    public void setAnalyzeButtonListener(ActionListener listener) {
-        // Remove listeners antigos (se existirem)
-        ActionListener[] listeners = analyzeButton.getActionListeners();
-        for (ActionListener l : listeners) {
-            analyzeButton.removeActionListener(l);
-        }
+    // ===== Métodos públicos =====
 
-        // Adiciona o novo listener
+    public void setAnalyzeButtonListener(ActionListener listener) {
+        for (ActionListener l : analyzeButton.getActionListeners())
+            analyzeButton.removeActionListener(l);
         analyzeButton.addActionListener(listener);
     }
 
-    /**
-     * HABILITAR/DESABILITAR BOTÃO DE ANÁLISE
-     * Controlar quando o usuário pode ou não clicar no botão
-     */
+    public void setPlayListener(ActionListener l) {
+        playButton.addActionListener(l);
+    }
+
+    public void setPauseListener(ActionListener l) {
+        pauseButton.addActionListener(l);
+    }
+
+    public void setNextListener(ActionListener l) {
+        nextButton.addActionListener(l);
+    }
+
+    public void setStopListener(ActionListener l) {
+        stopButton.addActionListener(l);
+    }
+
+    public void enableControlButtons(boolean enable) {
+        playButton.setEnabled(enable);
+        pauseButton.setEnabled(enable);
+        nextButton.setEnabled(enable);
+        stopButton.setEnabled(enable);
+    }
+
     public void setAnalyzeButtonEnabled(boolean enabled) {
         analyzeButton.setEnabled(enabled);
-
-        // Ajustar aparência baseada no estado
         if (enabled) {
-            analyzeButton.setBackground(new Color(40, 167, 69)); // Verde
+            analyzeButton.setBackground(new Color(40, 167, 69));
             analyzeButton.setText("🚀 Analisar Texto");
         } else {
             analyzeButton.setBackground(Color.GRAY);
@@ -154,38 +212,23 @@ public class ConfigPanel extends JPanel {
         }
     }
 
-    /**
-     * OBTER ESTRUTURA SELECIONADA
-     * Retorna qual estrutura o usuário escolheu (0=Busca, 1=BST, 2=AVL)
-     */
     public int getSelectedStructureIndex() {
         return structureComboBox.getSelectedIndex();
     }
 
-    /**
-     * OBTER NOME DA ESTRUTURA SELECIONADA
-     * Retorna o texto completo da estrutura selecionada
-     */
-    public String getSelectedStructureName() {
-        return (String) structureComboBox.getSelectedItem();
+    public boolean isStepByStepEnabled() {
+        return stepByStepCheckBox.isSelected();
     }
 
-    /**
-     * DEFINIR ESTRUTURA SELECIONADA
-     * Permite programaticamente escolher uma estrutura
-     */
-    public void setSelectedStructure(int index) {
-        if (index >= 0 && index < structureComboBox.getItemCount()) {
-            structureComboBox.setSelectedIndex(index);
-        }
-    }
+    // public int getStepDelayMillis() {
+    //     return speedSlider.getValue();
+    // }
 
-    /**
-     * BLOQUEAR/DESBLOQUEAR CONFIGURAÇÕES DURANTE ANÁLISE
-     * Impedir que o usuário mude configurações enquanto está analisando
-     */
     public void setConfigurationEnabled(boolean enabled) {
         structureComboBox.setEnabled(enabled);
+        stepByStepCheckBox.setEnabled(enabled);
+        // speedSlider.setEnabled(enabled && stepByStepCheckBox.isSelected());
+        enableControlButtons(false);
 
         if (!enabled) {
             analyzeButton.setText("⏳ Analisando...");
