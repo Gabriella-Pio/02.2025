@@ -14,6 +14,7 @@ import java.awt.event.ItemEvent;
  * Este painel permite ao usuário:
  * 1. Escolher qual estrutura usar para mostrar as frequências
  * 2. Iniciar a análise do texto
+ * 3. Configurar modo passo a passo (para árvores)
  *
  * É como o "painel de controle" da nossa aplicação.
  */
@@ -24,29 +25,29 @@ public class ConfigPanel extends JPanel {
     private JButton analyzeButton; // Botão para iniciar análise
     private JLabel instructionLabel; // Label com instruções
 
-    // Passo-a-passo
-    private JCheckBox stepByStepCheckBox;
-    private JLabel speedLabel;
-    private JSlider speedSlider;
+    // Componentes para modo passo a passo
+    private JCheckBox stepByStepCheckBox; // Checkbox para ativar modo passo a passo
+    private JLabel speedLabel; // Label para controle de velocidade
+    private JSlider speedSlider; // Slider para ajustar velocidade
 
-    // Controles extras
-    private JButton playButton;
-    private JButton pauseButton;
-    private JButton nextButton;
-    private JButton stopButton;
+    // Controles de execução passo a passo
+    private JButton playButton; // Botão play
+    private JButton pauseButton; // Botão pause
+    private JButton nextButton; // Botão next (próximo passo)
+    private JButton stopButton; // Botão stop
 
-    private JPanel stepPanel;
-    private JPanel controlPanel;
+    private JPanel stepPanel; // Painel para opções de passo a passo
+    private JPanel controlPanel; // Painel para controles de execução
 
     /**
      * CONSTRUTOR
      * Monta o painel de configurações
      */
     public ConfigPanel() {
-        createComponents();
-        layoutComponents();
-        customizeComponents();
-        setupInteractions();
+        createComponents(); // Cria os componentes
+        layoutComponents(); // Organiza o layout
+        customizeComponents(); // Personaliza aparência
+        setupInteractions(); // Configura interações
     }
 
     /**
@@ -75,6 +76,7 @@ public class ConfigPanel extends JPanel {
         stepByStepCheckBox = new JCheckBox("Montar passo a passo");
         // speedLabel = new JLabel("Velocidade (ms):");
 
+        // Controles de velocidade (comentados para versão simplificada)
         // speedSlider = new JSlider(50, 2000, 500); // 50–2000 ms
         // speedSlider.setPaintTicks(true);
         // speedSlider.setPaintLabels(true);
@@ -82,16 +84,19 @@ public class ConfigPanel extends JPanel {
         // speedSlider.setMinorTickSpacing(50);
         // speedSlider.setEnabled(false);
 
+        // Botões de controle de execução
         playButton = new JButton("▶ Play");
         pauseButton = new JButton("⏸ Pause");
         nextButton = new JButton("⏭ Next");
         stopButton = new JButton("⏹ Stop");
 
+        // Inicialmente desabilitados
         playButton.setEnabled(false);
         pauseButton.setEnabled(false);
         nextButton.setEnabled(false);
         stopButton.setEnabled(false);
 
+        // Painéis para agrupar componentes
         stepPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
     }
@@ -111,19 +116,23 @@ public class ConfigPanel extends JPanel {
         add(instructionLabel);
         add(structureComboBox);
 
+        // Adicionar componentes de passo a passo ao painel
         stepPanel.add(stepByStepCheckBox);
         // stepPanel.add(speedLabel);
         // stepPanel.add(speedSlider);
         add(stepPanel);
 
+        // Adicionar botões de controle ao painel
         controlPanel.add(playButton);
         controlPanel.add(pauseButton);
         controlPanel.add(nextButton);
         controlPanel.add(stopButton);
         add(controlPanel);
 
+        // Adicionar botão principal de análise
         add(analyzeButton);
 
+        // Inicialmente ocultar painéis de controle
         stepPanel.setVisible(false);
         controlPanel.setVisible(false);
     }
@@ -132,30 +141,36 @@ public class ConfigPanel extends JPanel {
      * PERSONALIZAR COMPONENTES
      * Ajustar cores, fontes, tamanhos, etc.
      */
-
     private void customizeComponents() {
+        // Configurar combobox
         structureComboBox.setPreferredSize(new Dimension(300, 30));
         structureComboBox.setBackground(Color.WHITE);
 
+        // Configurar botão de análise
         analyzeButton.setPreferredSize(new Dimension(160, 36));
-        analyzeButton.setBackground(new Color(40, 167, 69));
+        analyzeButton.setBackground(new Color(40, 167, 69)); // Verde
         analyzeButton.setForeground(Color.WHITE);
         analyzeButton.setFocusPainted(false);
         analyzeButton.setBorderPainted(false);
         analyzeButton.setOpaque(true);
         analyzeButton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
 
+        // Configurações de slider (comentadas)
         // speedSlider.setPreferredSize(new Dimension(250, 50));
     }
 
+    /**
+     * CONFIGURAR INTERAÇÕES
+     * Definir comportamentos para eventos dos componentes
+     */
     private void setupInteractions() {
         // Exibir ou ocultar painel de passo-a-passo dependendo da estrutura
         structureComboBox.addItemListener(e -> {
-            if (getSelectedStructureIndex() == 0) { // Vetor
+            if (getSelectedStructureIndex() == 0) { // Vetor (não suporta passo a passo)
                 stepPanel.setVisible(false);
                 controlPanel.setVisible(false);
                 stepByStepCheckBox.setSelected(false);
-            } else {
+            } else { // Árvores (suportam passo a passo)
                 stepPanel.setVisible(true);
                 controlPanel.setVisible(stepByStepCheckBox.isSelected());
             }
@@ -163,6 +178,7 @@ public class ConfigPanel extends JPanel {
             repaint();
         });
 
+        // Mostrar/ocultar controles quando checkbox for alterado
         stepByStepCheckBox.addItemListener(e -> {
             boolean on = e.getStateChange() == ItemEvent.SELECTED;
             // speedSlider.setEnabled(on);
@@ -170,14 +186,22 @@ public class ConfigPanel extends JPanel {
         });
     }
 
-    // ===== Métodos públicos =====
+    // ===== MÉTODOS PÚBLICOS PARA CONTROLE EXTERNO =====
 
+    /**
+     * Define listener para o botão de análise
+     * 
+     * @param listener ActionListener para o botão
+     */
     public void setAnalyzeButtonListener(ActionListener listener) {
         for (ActionListener l : analyzeButton.getActionListeners())
             analyzeButton.removeActionListener(l);
         analyzeButton.addActionListener(listener);
     }
 
+    /**
+     * Define listeners para os botões de controle
+     */
     public void setPlayListener(ActionListener l) {
         playButton.addActionListener(l);
     }
@@ -194,6 +218,11 @@ public class ConfigPanel extends JPanel {
         stopButton.addActionListener(l);
     }
 
+    /**
+     * Habilita/desabilita botões de controle
+     * 
+     * @param enable true para habilitar, false para desabilitar
+     */
     public void enableControlButtons(boolean enable) {
         playButton.setEnabled(enable);
         pauseButton.setEnabled(enable);
@@ -201,29 +230,45 @@ public class ConfigPanel extends JPanel {
         stopButton.setEnabled(enable);
     }
 
+    /**
+     * Habilita/desabilita botão de análise com feedback visual
+     * 
+     * @param enabled true para habilitar, false para desabilitar
+     */
     public void setAnalyzeButtonEnabled(boolean enabled) {
         analyzeButton.setEnabled(enabled);
         if (enabled) {
-            analyzeButton.setBackground(new Color(40, 167, 69));
+            analyzeButton.setBackground(new Color(40, 167, 69)); // Verde
             analyzeButton.setText("🚀 Analisar Texto");
         } else {
-            analyzeButton.setBackground(Color.GRAY);
+            analyzeButton.setBackground(Color.GRAY); // Cinza
             analyzeButton.setText("⏳ Selecione um arquivo primeiro");
         }
     }
 
+    /**
+     * Obtém índice da estrutura selecionada
+     * 
+     * @return 0=Vetor, 1=BST, 2=AVL
+     */
     public int getSelectedStructureIndex() {
         return structureComboBox.getSelectedIndex();
     }
 
+    /**
+     * Verifica se modo passo a passo está habilitado
+     * 
+     * @return true se habilitado, false caso contrário
+     */
     public boolean isStepByStepEnabled() {
         return stepByStepCheckBox.isSelected();
     }
 
-    // public int getStepDelayMillis() {
-    //     return speedSlider.getValue();
-    // }
-
+    /**
+     * Habilita/desabilita toda a configuração durante análise
+     * 
+     * @param enabled true para habilitar, false para desabilitar
+     */
     public void setConfigurationEnabled(boolean enabled) {
         structureComboBox.setEnabled(enabled);
         stepByStepCheckBox.setEnabled(enabled);
@@ -232,10 +277,10 @@ public class ConfigPanel extends JPanel {
 
         if (!enabled) {
             analyzeButton.setText("⏳ Analisando...");
-            analyzeButton.setBackground(Color.ORANGE);
+            analyzeButton.setBackground(Color.ORANGE); // Laranja durante análise
         } else if (analyzeButton.isEnabled()) {
             analyzeButton.setText("🚀 Analisar Texto");
-            analyzeButton.setBackground(new Color(40, 167, 69));
+            analyzeButton.setBackground(new Color(40, 167, 69)); // Verde
         }
     }
 }

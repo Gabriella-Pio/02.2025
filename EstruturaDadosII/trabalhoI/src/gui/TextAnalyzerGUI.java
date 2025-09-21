@@ -100,7 +100,7 @@ public class TextAnalyzerGUI extends JFrame {
         // Criar o painel de resultados
         resultsPanel = new ResultsPanel();
 
-        // Criar a barra de progresso
+        // Criar la barra de progresso
         progressBar = new JProgressBar();
         progressBar.setStringPainted(true); // Mostrar texto na barra
         progressBar.setVisible(false); // Inicialmente invisível
@@ -109,13 +109,6 @@ public class TextAnalyzerGUI extends JFrame {
     /**
      * ORGANIZAÇÃO DOS COMPONENTES (LAYOUT)
      * Aqui decidimos ONDE cada componente fica na tela
-     *
-     * Usamos BorderLayout - imagine a tela dividida em 5 regiões:
-     * NORTE (NORTH) - parte superior
-     * SUL (SOUTH) - parte inferior
-     * LESTE (EAST) - lado direito
-     * OESTE (WEST) - lado esquerdo
-     * CENTRO (CENTER) - meio (pega o espaço restante)
      */
     private void layoutComponents() {
         // Usar BorderLayout para organizar
@@ -132,24 +125,6 @@ public class TextAnalyzerGUI extends JFrame {
         ((JComponent) getContentPane()).setBorder(
                 BorderFactory.createEmptyBorder(15, 15, 15, 15));
     }
-
-    /**
-     * CRIAR PAINEL SUPERIOR
-     * Combina o painel de arquivo + painel de configurações
-     * em um só painel vertical
-     */
-    // private JPanel createTopPanel() {
-    // JPanel topPanel = new JPanel();
-    // topPanel.setLayout(new BorderLayout(5, 5));
-
-    // // Arquivo vai no topo
-    // topPanel.add(filePanel, BorderLayout.NORTH);
-
-    // // Configurações vão embaixo
-    // topPanel.add(configPanel, BorderLayout.CENTER);
-
-    // return topPanel;
-    // }
 
     /**
      * CONFIGURAÇÃO DOS EVENTOS
@@ -219,10 +194,7 @@ public class TextAnalyzerGUI extends JFrame {
         configPanel.setAnalyzeButtonEnabled(false);
         resultsPanel.clearResults();
 
-        // Aqui conectamos com o backend
-        // Por enquanto, simulamos uma análise
-        // simulateAnalysis();
-
+        // Executar análise em thread separada para não travar a interface
         new SwingWorker<Void, String>() {
             @Override
             protected Void doInBackground() {
@@ -260,8 +232,12 @@ public class TextAnalyzerGUI extends JFrame {
         }.execute();
     }
 
+    /**
+     * EXECUTAR ANÁLISE NORMAL (SEM PASSO-A-PASSO)
+     */
     private void executarNormal(String[] palavras, int escolha) {
         if (escolha == 0) {
+            // Vetor Dinâmico
             DynamicWordFrequencyVector vetor = new DynamicWordFrequencyVector();
             TreeStats stats = vetor.buildWithStats(palavras);
             SwingUtilities.invokeLater(() -> {
@@ -270,6 +246,7 @@ public class TextAnalyzerGUI extends JFrame {
                 resultsPanel.showAnalysis(stats, "Vetor Dinâmico");
             });
         } else if (escolha == 1) {
+            // BST
             BSTree bst = new BSTree();
             TreeStats stats = bst.buildWithStats(palavras);
             SwingUtilities.invokeLater(() -> {
@@ -279,6 +256,7 @@ public class TextAnalyzerGUI extends JFrame {
                 resultsPanel.showTree(bst.getNodesWithLevel());
             });
         } else if (escolha == 2) {
+            // AVL
             AVLTree avl = new AVLTree();
             TreeStats stats = avl.buildWithStats(palavras);
             SwingUtilities.invokeLater(() -> {
@@ -290,6 +268,9 @@ public class TextAnalyzerGUI extends JFrame {
         }
     }
 
+    /**
+     * EXECUTAR ANÁLISE PASSO-A-PASSO
+     */
     private void executarPassoAPasso(String[] palavras) {
         palavrasStep = palavras;
         totalSteps = palavras.length;
@@ -307,6 +288,9 @@ public class TextAnalyzerGUI extends JFrame {
         stepTimer.start();
     }
 
+    /**
+     * EXECUTAR UM PASSO DA ANÁLISE
+     */
     private void runOneStep() {
         if (currentStep >= totalSteps) {
             if (stepTimer != null)
@@ -319,6 +303,7 @@ public class TextAnalyzerGUI extends JFrame {
         String[] prefix = Arrays.copyOfRange(palavrasStep, 0, currentStep);
 
         if (estruturaSelecionada == 1) {
+            // BST passo-a-passo
             BSTree bst = new BSTree();
             TreeStats stats = bst.buildWithStats(prefix);
             List<NodeInfo> nodes = bst.getNodesWithLevel();
@@ -330,6 +315,7 @@ public class TextAnalyzerGUI extends JFrame {
                 progressBar.setString("Inserindo: " + currentStep + " / " + totalSteps);
             });
         } else if (estruturaSelecionada == 2) {
+            // AVL passo-a-passo
             AVLTree avl = new AVLTree();
             TreeStats stats = avl.buildWithStats(prefix);
             List<NodeInfo> nodes = avl.getNodesWithLevel();
@@ -343,6 +329,9 @@ public class TextAnalyzerGUI extends JFrame {
         }
     }
 
+    /**
+     * MOSTRAR RESULTADOS FINAIS
+     */
     private void mostrarResultadosFinais() {
         if (estruturaSelecionada == 1) {
             BSTree bst = new BSTree();
@@ -363,6 +352,9 @@ public class TextAnalyzerGUI extends JFrame {
         }
     }
 
+    /**
+     * PARAR EXECUÇÃO PASSO-A-PASSO
+     */
     private void stopStepByStep() {
         if (stepTimer != null)
             stepTimer.stop();
@@ -371,14 +363,23 @@ public class TextAnalyzerGUI extends JFrame {
         configPanel.enableControlButtons(false);
     }
 
+    /**
+     * MOSTRAR MENSAGEM DE INFORMAÇÃO
+     */
     private void showMessage(String message) {
         JOptionPane.showMessageDialog(this, message, "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    /**
+     * MOSTRAR MENSAGEM DE ERRO
+     */
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Erro", JOptionPane.ERROR_MESSAGE);
     }
 
+    /**
+     * MÉTODO PRINCIPAL
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {

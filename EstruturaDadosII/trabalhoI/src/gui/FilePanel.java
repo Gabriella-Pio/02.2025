@@ -35,9 +35,9 @@ public class FilePanel extends JPanel {
      * Monta o painel de seleção de arquivo
      */
     public FilePanel() {
-        createComponents();
-        layoutComponents();
-        setupEventHandlers();
+        createComponents(); // Cria os componentes visuais
+        layoutComponents(); // Organiza o layout
+        setupEventHandlers(); // Configura os eventos
     }
 
     /**
@@ -156,6 +156,8 @@ public class FilePanel extends JPanel {
     /**
      * DEFINIR ARQUIVO SELECIONADO
      * Atualizar as informações mostradas na tela
+     * 
+     * @param file Arquivo selecionado (ou null para limpar seleção)
      */
     private void setSelectedFile(File file) {
         this.selectedFile = file;
@@ -184,6 +186,9 @@ public class FilePanel extends JPanel {
     /**
      * FORMATAR TAMANHO DO ARQUIVO
      * Converter bytes para formato legível (KB, MB, etc.)
+     * 
+     * @param bytes Tamanho do arquivo em bytes
+     * @return String formatada com unidade apropriada
      */
     private String formatFileSize(long bytes) {
         if (bytes < 1024) {
@@ -198,6 +203,8 @@ public class FilePanel extends JPanel {
     /**
      * DEFINIR "OUVINTE" PARA SELEÇÃO DE ARQUIVO
      * Permite que outras classes sejam avisadas quando um arquivo é selecionado
+     * 
+     * @param listener Objeto que implementa FileSelectionListener
      */
     public void setFileSelectionListener(FileSelectionListener listener) {
         this.listener = listener;
@@ -206,6 +213,8 @@ public class FilePanel extends JPanel {
     /**
      * OBTER ARQUIVO SELECIONADO
      * Permite que outras classes consultem qual arquivo está selecionado
+     * 
+     * @return Arquivo selecionado ou null se nenhum estiver selecionado
      */
     public File getSelectedFile() {
         return selectedFile;
@@ -223,6 +232,8 @@ public class FilePanel extends JPanel {
 interface FileSelectionListener {
     /**
      * Chamado quando um arquivo é selecionado com sucesso
+     * 
+     * @param file Arquivo selecionado
      */
     void onFileSelected(File file);
 

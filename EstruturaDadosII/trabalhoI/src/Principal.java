@@ -6,6 +6,10 @@ import arvore.TreeStats;
 import tokenizer.TextTokenizer;
 import vetor.DynamicWordFrequencyVector;
 
+/**
+ * Classe principal para execução em modo console
+ * Permite testar as estruturas sem a interface gráfica
+ */
 public class Principal {
     public static void main(String[] args) {
         TextTokenizer tokenizer = new TextTokenizer();

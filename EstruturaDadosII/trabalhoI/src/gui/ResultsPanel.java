@@ -13,18 +13,17 @@ import java.util.List;
 /**
  * PAINEL DE RESULTADOS
  * Atualizado para suportar análise de BST e AVL
+ * Exibe resultados textuais e visualização gráfica da árvore
  */
 public class ResultsPanel extends JPanel {
 
     // ====== COMPONENTES VISUAIS ======
-    private JTextArea textArea;
-    private JScrollPane textScrollPane;
-    private JScrollPane scrollPane;
-    private JPanel contentPanel;
-    private JButton clearButton;
-    private JButton exportButton;
-    private TreePanel treePanel;
-    private JTabbedPane tabbedPane; // Para alternar entre texto e árvore
+    private JTextArea textArea; // Área de texto para resultados
+    private JScrollPane textScrollPane; // Scroll pane para área de texto
+    private JButton clearButton; // Botão para limpar resultados
+    private JButton exportButton; // Botão para exportar resultados
+    private TreePanel treePanel; // Painel para visualização da árvore
+    private JTabbedPane tabbedPane; // Abas para alternar entre texto e árvore
 
     /**
      * CONSTRUTOR
@@ -56,7 +55,7 @@ public class ResultsPanel extends JPanel {
         treePanel = new TreePanel();
         treePanel.setBackground(textArea.getBackground());
 
-        // JScrollPane para a árvore - ESTA É A CHAVE!
+        // JScrollPane para a árvore
         JScrollPane treeScrollPane = new JScrollPane(treePanel);
         treeScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         treeScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
@@ -65,10 +64,6 @@ public class ResultsPanel extends JPanel {
         tabbedPane = new JTabbedPane();
         tabbedPane.addTab("📊 Resultados Textuais", textScrollPane);
         tabbedPane.addTab("🌳 Visualização da Árvore", treeScrollPane);
-
-        // // ScrollPane principal
-        // scrollPane = new JScrollPane(tabbedPane);
-        // scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
     }
 
     /**
